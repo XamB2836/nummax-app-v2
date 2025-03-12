@@ -8,7 +8,6 @@ import { ThemeProvider } from "@/components/Dashboard/theme-provider"
 
 
 // STYLES
-import "@/styles/style.css";
 import "@/styles/DashBoard.css"
 export const metadata = {
   title: "Nummax Designer App",

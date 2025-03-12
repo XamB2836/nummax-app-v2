@@ -4,7 +4,6 @@
     "paths": {
       "@/styles/*": ["styles/*"],
       "@/components/*": ["components/*"],
-      "@/modules/*": ["modules/*"],
       "@/data/*": ["data/*"],
       "@/lib/*": ["lib/*"],
       "@/ui/*": ["components/Dashboard/ui/*"],

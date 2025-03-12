@@ -4,7 +4,7 @@ import { LayoutDashboard, BarChart3, Calendar, Users, FileText, Settings, HelpCi
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/Dashboard/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/Dashboard/ui/tooltip"
-import { type } from "os"
+
 
 function SidebarItem({ icon: Icon, label, active, collapsed, onClick }) {
   const content = (
@@ -40,12 +40,6 @@ function SidebarItem({ icon: Icon, label, active, collapsed, onClick }) {
 export function Sidebar({ collapsed, activeTool, setActiveTool }) {
   const tools = [
     { type: "dashboard", label: "GridOptimizer", icon: Grid2x2Check },
-    { type: "analytics", label: "Analytics", icon: BarChart3 },
-    { type: "calendar", label: "Calendar", icon: Calendar },
-    { type: "employees", label: "Employees", icon: Users },
-    { type: "documents", label: "Documents", icon: FileText },
-    { type: "settings", label: "Settings", icon: Settings },
-    { type: "help", label: "Help", icon: HelpCircle },
     { type: "test", label: "Test", icon: HelpCircle}
 
   ]

@@ -2,8 +2,7 @@
 
 //import { Card, CardHeader, CardContent, CardTitle } from "@/components/Dashboard/ui/card";
 import { Card, CardHeader, CardContent, CardTitle } from "@/ui/card";
-import GridOptimizer from "@/components/gridMaker"; // Adjust the path if needed
-import { MetricInput } from "@/components/input";
+import GridOptimizer from "@/components/gridOptimizer"; // Adjust the path if needed
 
 export function GridOptimizerTool() {
   return (

@@ -2,12 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-import { Modules, ModulesLabels } from "@/modules/moduleList";
 
 //import WattageCalculator from "@/components/wattageCalculator";
-import GridOptimiser from "@/components/gridOptimiser";
-
-import GridMaker from "@/components/gridMaker";
+import GridOptimiser from "@/components/gridOptimizer";
 import { Dashboard } from "@/components/Dashboard/dashboard";
 
 export default function Home() {
@@ -18,7 +15,7 @@ export default function Home() {
       <Dashboard/>
 
       {/*<GridOptimise]/>*/}
-     <GridMaker/>
+     <GridOptimiser/>
 
     </div>
   );
