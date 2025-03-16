@@ -1,248 +1,211 @@
-// src/lib/optimizerCore.js
+// /lib/OptimizerCore.js
 
-// ----- Fixed Dimensions (mm) -----
-export const STANDARD_CASE_WIDTH = 1120;  // standard case width
-export const STANDARD_CASE_HEIGHT = 640;  // standard case height
-
-// ----- LED Module Sizes -----
-// For portrait layout, we use rotated LED modules (160×320),
-// so that a standard case is 1120×640 (7 modules across, 2 rows).
-// For rotated layout, cells are transformed to 640×1120.
-export const LED_ROTATED  = { width: 160, height: 320 };
+// === LED MODULE CONFIG ===
 export const LED_STANDARD = { width: 320, height: 160 };
+export const LED_ROTATED = { width: 160, height: 320 };
 
-// ----- Pre-made Custom Cases -----
-// (Empty in this version)
-export const preMadeCustomCases = [];
+// === CASE SIZES ===
+export const STANDARD_CASE_WIDTH = 1120;
+export const STANDARD_CASE_HEIGHT = 640;
 
-// ----- LED Panel Options (for consumption calculation) -----
+// === PANEL CONFIG ===
 export const ledPanels = [
   { id: 'panel1', name: '2.5 GOB', wattPerM2: 550 },
   { id: 'panel2', name: '1.25 Flex', wattPerM2: 290 },
-  { id: 'panel3', name: 'LED Panel C', wattPerM2: 200 },
+  { id: 'panel3', name: 'LED Panel C', wattPerM2: 200 }
 ];
 
-// ----- Utility: Allowed Custom Sizes for a Given Height -----
-export function getAllowedWidthsForHeight(desiredHeight, moduleWidth) {
-  const widths = new Set();
-  preMadeCustomCases.forEach(c => {
-    if (c.height === desiredHeight && c.width % moduleWidth === 0) {
-      widths.add(c.width);
-    }
+// === MODULE COUNT CALC ===
+export function computeModuleCount(cell, moduleW, moduleH) {
+  return (cell.width / moduleW) * (cell.height / moduleH);
+}
+
+// === ROTATED LAYOUT TRANSFORM ===
+export function transformLayout(layout, containerWidth) {
+  const transformCell = (cell) => ({
+    x: cell.y,
+    y: containerWidth - cell.x - cell.width,
+    width: cell.height,
+    height: cell.width,
+    type: cell.type,
+    label: cell.label || `${cell.width}x${cell.height}`
   });
-  return Array.from(widths);
+
+  return {
+    standardCases: layout.standardCases.map(transformCell),
+    cutCases: layout.cutCases.map(transformCell),
+    valid: layout.valid,
+    warning: layout.warning
+  };
 }
 
-// ----- Partitioning Functions -----
-export function partitionColumnsExact(target, allowedSet) {
-  const sorted = allowedSet.slice().sort((a, b) => b - a);
-  function helper(remaining, current) {
-    if (remaining === 0) return current;
-    for (let w of sorted) {
-      if (w <= remaining) {
-        const result = helper(remaining - w, current.concat(w));
-        if (result !== null) return result;
-      }
-    }
-    return null;
-  }
-  return helper(target, []);
-}
+// === MAIN LAYOUT ENGINE (TRIPLE SWEEP MODE) ===
+export function computeAdvancedLayout(screenWidth, screenHeight) {
+  const layout = {
+    standardCases: [],
+    cutCases: [],
+    valid: true,
+    warning: null
+  };
 
-export function partitionColumnsWithMissing(target, allowedSet, moduleWidth) {
-  const filteredAllowed = allowedSet.filter(w => w % moduleWidth === 0);
-  const exact = partitionColumnsExact(target, filteredAllowed);
-  if (exact !== null) return { partition: exact, missing: 0 };
-  else {
-    const sorted = filteredAllowed.slice().sort((a, b) => b - a);
-    let partition = [];
-    let remaining = target;
-    for (let w of sorted) {
-      while (remaining >= w) {
-        partition.push(w);
-        remaining -= w;
-      }
-    }
-    const tolerance = moduleWidth * 0.1;
-    if (remaining > 0 && remaining < tolerance && partition.length > 0) {
-      partition[partition.length - 1] += remaining;
-      remaining = 0;
-    }
-    return { partition, missing: remaining };
-  }
-}
+  const CASE_A = { width: 1120, height: 640, label: 'A' };
+  const SLICED_A_HALF = { width: 1120, height: 320, label: 'A-1/2' };
+  const SLICED_A_THIRD = { width: 1120, height: 160, label: 'A-1/4' };
+  const CASE_B_H = { width: 1280, height: 160, label: 'B-H' };
+  const CASE_B_V = { width: 160, height: 1280, label: 'B-V' };
 
-export function splitMissing(missing, moduleWidth) {
-  const parts = [];
-  while (missing >= moduleWidth) {
-    parts.push(moduleWidth);
-    missing -= moduleWidth;
-  }
-  if (missing > 0) parts.push(missing);
-  return parts;
-}
+  const bigCutSizes = [
+    { width: 1280, height: 160 },
+    { width: 160, height: 1280 },
+    { width: 1120, height: 320 },
+    { width: 1120, height: 160 },
+    { width: 960, height: 160 },
+    { width: 640, height: 160 }
+  ];
 
-export function subdivideMissingCells(cells, moduleWidth, moduleHeight) {
-  const subdivided = [];
-  const toleranceW = moduleWidth * 0.1;
-  const toleranceH = moduleHeight * 0.1;
-  for (const cell of cells) {
-    const remainderW = cell.width % moduleWidth;
-    const remainderH = cell.height % moduleHeight;
-    let adjustedWidth = cell.width;
-    let adjustedHeight = cell.height;
-    if (remainderW > 0 && remainderW < toleranceW) {
-      adjustedWidth = Math.round(cell.width / moduleWidth) * moduleWidth;
-    }
-    if (remainderH > 0 && remainderH < toleranceH) {
-      adjustedHeight = Math.round(cell.height / moduleHeight) * moduleHeight;
-    }
-    if (adjustedWidth % moduleWidth !== 0 || adjustedHeight % moduleHeight !== 0) {
-      subdivided.push(cell);
-    } else {
-      const cols = adjustedWidth / moduleWidth;
-      const rows = adjustedHeight / moduleHeight;
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          subdivided.push({
-            x: cell.x + c * moduleWidth,
-            y: cell.y + r * moduleHeight,
-            width: moduleWidth,
-            height: moduleHeight,
-            type: cell.type
-          });
-        }
-      }
-    }
-  }
-  return subdivided;
-}
+  const smallTileSizes = [
+    { width: 320, height: 160 }
+  ];
 
-export function findMatchingCustomCase(zoneWidth, zoneHeight) {
-  return preMadeCustomCases.find(c => c.width === zoneWidth && c.height === zoneHeight);
-}
+  const offsetSizes = [
+    { width: 160, height: 960 },
+    { width: 160, height: 640 },
+    { width: 160, height: 320 },
+    { width: 320, height: 160 }
+  ];
 
-export function generateCaseSummary(cases) {
-  const summary = {};
-  cases.forEach(c => {
-    const key = `${c.width}x${c.height}`;
-    summary[key] = (summary[key] || 0) + 1;
-  });
-  return summary;
-}
+  // === PHASE 1: Standard placements
+  const fullA = placeRectBlocks(CASE_A, screenWidth, screenHeight, [], 'standard');
+  layout.standardCases.push(...fullA.placed);
+  const occupied = [...layout.standardCases];
 
-export function isScreenFillable(screenWidth, screenHeight) {
-  if (screenWidth % LED_ROTATED.width === 0 && screenHeight % LED_ROTATED.height === 0) return true;
-  if (screenWidth % LED_STANDARD.width === 0 && screenHeight % LED_STANDARD.height === 0) return true;
-  return false;
-}
+  const slicedHalf = placeRectBlocks(SLICED_A_HALF, screenWidth, screenHeight, occupied, 'cut');
+  layout.cutCases.push(...slicedHalf.placed);
+  occupied.push(...slicedHalf.placed);
 
-export function computeStandardLayout(screenWidth, screenHeight) {
-  const rowHeight = STANDARD_CASE_HEIGHT;
-  const fullRows = Math.floor(screenHeight / rowHeight);
-  const bottomHeight = screenHeight % rowHeight;
-  const layout = { standardCases: [], customCases: [], missingCases: [], valid: true };
-  
-  if (bottomHeight > 0 && (bottomHeight % LED_ROTATED.height !== 0)) {
-    layout.valid = false;
-    layout.warning = "Pour le layout standard, la hauteur de la dernière ligne doit être un multiple de 320 mm.";
-    return layout;
-  }
-  
-  // Process full rows
-  for (let r = 0; r < fullRows; r++) {
-    const y = r * rowHeight;
-    let xOffset = 0;
-    const allowed = (screenWidth % STANDARD_CASE_WIDTH === 0)
-      ? [STANDARD_CASE_WIDTH]
-      : [STANDARD_CASE_WIDTH, ...getAllowedWidthsForHeight(rowHeight, LED_ROTATED.width)
-          .filter(w => w < STANDARD_CASE_WIDTH)].sort((a, b) => b - a);
-    const { partition, missing } = partitionColumnsWithMissing(screenWidth, allowed, LED_ROTATED.width);
-    partition.forEach(seg => {
-      if (seg === STANDARD_CASE_WIDTH) {
-        layout.standardCases.push({ x: xOffset, y, width: seg, height: rowHeight, type: 'standard' });
-      } else {
-        const match = findMatchingCustomCase(seg, rowHeight);
-        if (match) layout.customCases.push({ x: xOffset, y, width: seg, height: rowHeight, type: 'custom (pre-made)' });
-        else layout.missingCases.push({ x: xOffset, y, width: seg, height: rowHeight, type: 'missing' });
-      }
-      xOffset += seg;
-    });
-    if (missing > 0) {
-      const parts = splitMissing(missing, LED_ROTATED.width);
-      parts.forEach(part => {
-        layout.missingCases.push({ x: xOffset, y, width: part, height: rowHeight, type: 'missing' });
-        xOffset += part;
-      });
-    }
-    if (xOffset !== screenWidth) layout.valid = false;
-  }
+  const slicedThird = placeRectBlocks(SLICED_A_THIRD, screenWidth, screenHeight, occupied, 'cut');
+  layout.cutCases.push(...slicedThird.placed);
+  occupied.push(...slicedThird.placed);
 
-  // Process bottom row if exists
-  if (bottomHeight > 0) {
-    const y = fullRows * rowHeight;
-    let xOffset = 0;
-    // For bottom row, try to get allowed widths from the remaining height if available.
-    const allowed = getAllowedWidthsForHeight(bottomHeight, LED_ROTATED.width).length > 0
-      ? getAllowedWidthsForHeight(bottomHeight, LED_ROTATED.width)
-      : [LED_ROTATED.width];
-    allowed.sort((a, b) => b - a);
-    const { partition, missing } = partitionColumnsWithMissing(screenWidth, allowed, LED_ROTATED.width);
-    partition.forEach(seg => {
-      const match = findMatchingCustomCase(seg, bottomHeight);
-      if (match) layout.customCases.push({ x: xOffset, y, width: seg, height: bottomHeight, type: 'custom (pre-made)' });
-      else layout.missingCases.push({ x: xOffset, y, width: seg, height: bottomHeight, type: 'missing' });
-      xOffset += seg;
-    });
-    if (missing > 0) {
-      const parts = splitMissing(missing, LED_ROTATED.width);
-      parts.forEach(part => {
-        layout.missingCases.push({ x: xOffset, y, width: part, height: bottomHeight, type: 'missing' });
-        xOffset += part;
-      });
-    }
-    if (xOffset !== screenWidth) layout.valid = false;
-  }
+  const bh = placeRectBlocks(CASE_B_H, screenWidth, screenHeight, occupied, 'standard');
+  layout.standardCases.push(...bh.placed);
+  occupied.push(...bh.placed);
+
+  const bv = placeRectBlocks(CASE_B_V, screenWidth, screenHeight, occupied, 'standard');
+  layout.standardCases.push(...bv.placed);
+  occupied.push(...bv.placed);
+
+  // === PHASE 2: Grid Sweep – Priority Big Blocks
+  gridSweepFiller(layout.cutCases, occupied, screenWidth, screenHeight, bigCutSizes);
+
+  // === PHASE 3: Grid Sweep – Small Filler Tiles
+  gridSweepFiller(layout.cutCases, occupied, screenWidth, screenHeight, smallTileSizes);
+
+  // === PHASE 4: Offset Sweep – Misaligned Cuts (catch final edge zones)
+  gridOffsetSweepFiller(layout.cutCases, occupied, screenWidth, screenHeight, offsetSizes);
 
   return layout;
 }
 
-export function transformLayout(layout, containerWidth) {
-  const transformed = { standardCases: [], customCases: [], missingCases: [], valid: layout.valid, warning: layout.warning };
-  function transformCell(cell) {
-    return {
-      x: cell.y,
-      y: containerWidth - cell.x - cell.width,
-      width: cell.height,
-      height: cell.width,
-      type: cell.type
-    };
+// === BLOCK PLACER ===
+function placeRectBlocks(caseDef, maxW, maxH, existing = [], type = 'standard') {
+  const placed = [];
+  const cols = Math.floor(maxW / caseDef.width);
+  const rows = Math.floor(maxH / caseDef.height);
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = c * caseDef.width;
+      const y = r * caseDef.height;
+
+      const overlaps = existing.some(cell =>
+        x < cell.x + cell.width &&
+        x + caseDef.width > cell.x &&
+        y < cell.y + cell.height &&
+        y + caseDef.height > cell.y
+      );
+
+      if (!overlaps) {
+        const block = {
+          x,
+          y,
+          width: caseDef.width,
+          height: caseDef.height,
+          type,
+          label: caseDef.label
+        };
+        placed.push(block);
+        existing.push(block);
+      }
+    }
   }
-  transformed.standardCases = layout.standardCases.map(transformCell);
-  transformed.customCases = layout.customCases.map(transformCell);
-  transformed.missingCases = layout.missingCases.map(transformCell);
-  return transformed;
+
+  return { placed };
 }
 
-export function chooseLayout(w, h) {
-  const numericWidth = Number(w);
-  const numericHeight = Number(h);
-  const portrait = computeStandardLayout(numericWidth, numericHeight);
-  const rotated = transformLayout(computeStandardLayout(numericHeight, numericWidth), numericHeight);
-  const missingArea = (layout) =>
-    layout.missingCases.reduce((sum, cell) => sum + cell.width * cell.height, 0);
-  if (portrait.valid && rotated.valid) {
-    return missingArea(portrait) <= missingArea(rotated)
-      ? { layout: portrait, mode: 'standard' }
-      : { layout: rotated, mode: 'rotated' };
+// === GRID SWEEP FILLER ===
+function gridSweepFiller(cutCases, occupied, maxW, maxH, cutSizes) {
+  const minW = LED_STANDARD.width;
+  const minH = LED_STANDARD.height;
+
+  const isOccupied = (x, y, w, h) =>
+    occupied.some(cell =>
+      x < cell.x + cell.width &&
+      x + w > cell.x &&
+      y < cell.y + cell.height &&
+      y + h > cell.y
+    );
+
+  for (let y = 0; y + minH <= maxH; y += minH) {
+    for (let x = 0; x + minW <= maxW; x += minW) {
+      for (let block of cutSizes) {
+        const { width, height } = block;
+        if (x + width <= maxW && y + height <= maxH && !isOccupied(x, y, width, height)) {
+          const cut = {
+            x,
+            y,
+            width,
+            height,
+            type: 'cut',
+            label: `${width}x${height}`
+          };
+          cutCases.push(cut);
+          occupied.push(cut);
+          break;
+        }
+      }
+    }
   }
-  if (portrait.valid) return { layout: portrait, mode: 'standard' };
-  if (rotated.valid) return { layout: rotated, mode: 'rotated' };
-  return missingArea(portrait) <= missingArea(rotated)
-    ? { layout: portrait, mode: 'standard' }
-    : { layout: rotated, mode: 'rotated' };
 }
 
-export function computeModuleCount(cell, moduleWidth, moduleHeight) {
-  return (cell.width / moduleWidth) * (cell.height / moduleHeight);
+// === OFFSET SWEEP FILLER ===
+function gridOffsetSweepFiller(cutCases, occupied, maxW, maxH, offsetSizes) {
+  const isOccupied = (x, y, w, h) =>
+    occupied.some(cell =>
+      x < cell.x + cell.width &&
+      x + w > cell.x &&
+      y < cell.y + cell.height &&
+      y + h > cell.y
+    );
+
+  for (let y = 0; y <= maxH - 160; y += 160) {
+    for (let x = 0; x <= maxW - 160; x += 160) {
+      for (let block of offsetSizes) {
+        const { width, height } = block;
+        if (x + width <= maxW && y + height <= maxH && !isOccupied(x, y, width, height)) {
+          const cut = {
+            x,
+            y,
+            width,
+            height,
+            type: 'cut',
+            label: `${width}x${height}`
+          };
+          cutCases.push(cut);
+          occupied.push(cut);
+          break;
+        }
+      }
+    }
+  }
 }

@@ -1,114 +1,70 @@
-// src/components/GridOptimizer.js
-import React, { useState } from 'react';
-import {
-  LED_ROTATED,
-  LED_STANDARD,
-  ledPanels,
-  chooseLayout,
-  subdivideMissingCells,
-  computeModuleCount
-} from '@/lib/OptimizerCore';
-import {
-  renderGlobalSubdivisions,
-  renderCaseRectangle,
-  renderCaseText
-} from '@/lib/SVGRenderer';
-import { validateScreenDimensions } from '@/lib/InputHandler';
-import { generateCaseSummary } from '@/lib/caseSummary';
-import { calculateConsumption } from '@/lib/consumptionCalculator';
+// /components/GridOptimizer.jsx
 
-function GridOptimizer() {
-  // State management for screen dimensions and selected LED panel.
+"use client"; // 👈 Required if using Next.js App Router + client component
+
+const React = require("react");
+const { useState } = require("react");
+
+const {
+  LED_STANDARD,
+  LED_ROTATED,
+  ledPanels
+} = require('@/lib/OptimizerCore');
+
+const { chooseBestLayout } = require('@/lib/LayoutEngine');
+const { calculateConsumption } = require('@/lib/consumptionCalculator');
+const { validateScreenDimensions } = require('@/lib/InputHandler');
+const { generateCaseSummary } = require('@/lib/caseSummary');
+const { RenderCell } = require('@/lib/CaseRenderer');
+
+
+const GridOptimizer = () => {
   const [screenWidth, setScreenWidth] = useState(1120);
   const [screenHeight, setScreenHeight] = useState(640);
   const [selectedPanel, setSelectedPanel] = useState(ledPanels[0].id);
+  const [modeOverride, setModeOverride] = useState('auto');
 
-  // Style definitions.
-  const containerStyle = {
-    fontFamily: 'Arial, sans-serif',
-    color: '#fff',
-    backgroundColor: '#222',
-    padding: '20px',
-    borderRadius: '8px',
-    maxWidth: '900px',
-    margin: '20px auto'
-  };
-  const headingStyle = {
-    marginBottom: '15px',
-    borderBottom: '2px solid #555',
-    paddingBottom: '5px'
-  };
-  const infoStyle = { margin: '8px 0', fontSize: '16px' };
-  const inputStyle = {
-    padding: '6px 10px',
-    borderRadius: '4px',
-    border: '1px solid #555',
-    backgroundColor: '#333',
-    color: '#fff'
-  };
-  const listStyle = { listStyleType: 'none', padding: '0' };
-  const subHeadingStyle = { marginTop: '15px', textDecoration: 'underline' };
-
-  // Validate screen dimensions.
   const { valid: dimsValid, warning: dimsWarning } = validateScreenDimensions(screenWidth, screenHeight);
 
-  // Get the optimal layout using core math.
-  const candidate = chooseLayout(screenWidth, screenHeight);
-  const finalLayout = candidate.layout;
-  const mode = candidate.mode;
+  const { layout, mode } = chooseBestLayout(screenWidth, screenHeight, modeOverride === 'auto' ? null : modeOverride);
+
   const ledModule = mode === 'standard' ? LED_ROTATED : LED_STANDARD;
 
-  // Process missing cells using a core function.
-  if (finalLayout.missingCases.length > 0) {
-    const subdivided = subdivideMissingCells(finalLayout.missingCases, ledModule.width, ledModule.height);
-    const invalidCells = subdivided.some(cell => cell.width !== ledModule.width || cell.height !== ledModule.height);
-    if (invalidCells) {
-      finalLayout.valid = false;
-      finalLayout.warning = "WARNING: Screen size must be a multiple of 320x160!";
-    }
-    finalLayout.missingCases = subdivided;
-  }
-  
-  // Calculate total module count.
-  const totalModules =
-    finalLayout.standardCases.reduce((sum, c) => sum + computeModuleCount(c, ledModule.width, ledModule.height), 0) +
-    finalLayout.customCases.reduce((sum, c) => sum + computeModuleCount(c, ledModule.width, ledModule.height), 0);
+  const selectedPanelObj = ledPanels.find(p => p.id === selectedPanel);
+  const consumption = selectedPanelObj
+    ? calculateConsumption(screenWidth, screenHeight, selectedPanelObj.wattPerM2)
+    : 0;
 
-  // Consumption calculation.
-  const selectedPanelObj = ledPanels.find(panel => panel.id === selectedPanel);
-  const consumption = selectedPanelObj ? calculateConsumption(screenWidth, screenHeight, selectedPanelObj.wattPerM2) : 0;
+  const totalModules = [...layout.standardCases, ...(layout.cutCases || [])].reduce(
+    (sum, c) => sum + ((c.width / ledModule.width) * (c.height / ledModule.height)),
+    0
+  );
+
   const scale = 0.2;
+  const colorMap = {
+    standard: 'green',
+    cut: 'orange'
+  };
 
-  // Generate summaries for different cell types.
-  const standardSummary = generateCaseSummary(finalLayout.standardCases);
-  const customSummary = generateCaseSummary(finalLayout.customCases);
-  const missingSummary = generateCaseSummary(finalLayout.missingCases);
+  const stdSum = generateCaseSummary(layout.standardCases);
+  const cutSum = generateCaseSummary(layout.cutCases || []);
 
   return (
-    <div style={containerStyle}>
-      <h2 style={headingStyle}>Grid Optimizer & Consumption Calculator</h2>
-      <div style={{ marginBottom: '15px' }}>
-        <label style={infoStyle}>
-          Width (mm):&nbsp;
-          <input
-            type="number"
-            style={inputStyle}
-            value={screenWidth}
-            onChange={(e) => setScreenWidth(Number(e.target.value))}
-          />
+    <div style={styles.container}>
+      <h2 style={styles.heading}>LED Screen Grid Optimizer ⚙</h2>
+
+      <div style={styles.controls}>
+        <label style={styles.label}>
+          Width (mm):
+          <input type="number" value={screenWidth} onChange={(e) => setScreenWidth(+e.target.value)} style={styles.input} />
         </label>
-        <label style={{ ...infoStyle, marginLeft: '15px' }}>
-          Height (mm):&nbsp;
-          <input
-            type="number"
-            style={inputStyle}
-            value={screenHeight}
-            onChange={(e) => setScreenHeight(Number(e.target.value))}
-          />
+        <label style={styles.label}>
+          Height (mm):
+          <input type="number" value={screenHeight} onChange={(e) => setScreenHeight(+e.target.value)} style={styles.input} />
         </label>
-        <label style={{ ...infoStyle, marginLeft: '15px' }}>
-          LED Panel:&nbsp;
-          <select value={selectedPanel} onChange={(e) => setSelectedPanel(e.target.value)} style={inputStyle}>
+        <label style={styles.label}>
+          LED Panel:
+          <select value={selectedPanel} onChange={(e) => setSelectedPanel(e.target.value)} style={styles.input}>
             {ledPanels.map(panel => (
               <option key={panel.id} value={panel.id}>
                 {panel.name} ({panel.wattPerM2} W/m²)
@@ -116,85 +72,108 @@ function GridOptimizer() {
             ))}
           </select>
         </label>
+        <label style={styles.label}>
+          Layout Mode:
+          <select value={modeOverride} onChange={(e) => setModeOverride(e.target.value)} style={styles.input}>
+            <option value="auto">Auto</option>
+            <option value="standard">Force Standard</option>
+            <option value="rotated">Force Rotated</option>
+          </select>
+        </label>
       </div>
-      <p style={infoStyle}>Screen: {screenWidth} x {screenHeight} mm</p>
-      <p style={infoStyle}>Layout mode: {mode} ({finalLayout.valid ? "Valid" : "Invalid tiling!"})</p>
-      {(finalLayout.warning || dimsWarning) && (
-        <p style={{ ...infoStyle, color: '#ff4d4d', fontWeight: 'bold' }}>
-          {finalLayout.warning || dimsWarning}
+
+      {(layout.warning || dimsWarning) && (
+        <p style={styles.warning}>
+          {layout.warning || dimsWarning}
         </p>
       )}
-      <p style={infoStyle}>Total LED Modules Used: {totalModules.toFixed(1)}</p>
-      
+
+      <p style={styles.info}>Layout Mode: {mode}</p>
+      <p style={styles.info}>LED Module: {ledModule.width} x {ledModule.height}</p>
+      <p style={styles.info}>Total Modules: {totalModules.toFixed(1)}</p>
+
       <svg
-        width={(screenWidth * scale) + 1 }
+        width={(screenWidth * scale) + 1}
         height={(screenHeight * scale) + 1}
-        style={{ border: '1px solid #555', background: '#333', display: 'block', margin: '20px auto' }}
+        style={styles.svg}
       >
-        {finalLayout.standardCases.map((c, i) => (
-          <g key={`std-${i}`}>
-            {renderCaseRectangle(c, scale, 'green', 'white')}
-            {renderGlobalSubdivisions(c, scale, ledModule.width, ledModule.height, screenWidth, screenHeight)}
-            {renderCaseText(c, scale)}
-          </g>
+        {layout.standardCases.map((cell, i) => (
+          <RenderCell
+            key={`std-${i}`}
+            cell={cell}
+            scale={scale}
+            moduleWidth={ledModule.width}
+            moduleHeight={ledModule.height}
+            fillColor={colorMap[cell.type]}
+          />
         ))}
-        {finalLayout.customCases.map((c, i) => (
-          <g key={`cust-${i}`}>
-            {renderCaseRectangle(c, scale, 'orange', 'white')}
-            {renderGlobalSubdivisions(c, scale, ledModule.width, ledModule.height, screenWidth, screenHeight)}
-            {renderCaseText(c, scale)}
-          </g>
-        ))}
-        {finalLayout.missingCases.map((c, i) => (
-          <g key={`miss-${i}`}>
-            {renderCaseRectangle(c, scale, 'red', 'white')}
-            {renderCaseText(c, scale)}
-          </g>
+        {(layout.cutCases || []).map((cell, i) => (
+          <RenderCell
+            key={`cut-${i}`}
+            cell={cell}
+            scale={scale}
+            moduleWidth={ledModule.width}
+            moduleHeight={ledModule.height}
+            fillColor={colorMap[cell.type]}
+          />
         ))}
       </svg>
-      
-      <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#333', borderRadius: '6px' }}>
-        <h3 style={{ color: '#fff' }}>Estimated Consumption</h3>
-        <p style={infoStyle}>Screen Area: {((screenWidth * 0.001) * (screenHeight * 0.001)).toFixed(2)} m²</p>
-        <p style={infoStyle}>
-          {selectedPanelObj ? `${selectedPanelObj.name} (${selectedPanelObj.wattPerM2} W/m²)` : ''}
-        </p>
-        <p style={{ ...infoStyle, fontWeight: 'bold' }}>
-          Total Consumption: {consumption.toFixed(2)} W
-        </p>
+
+      <div style={styles.block}>
+        <h3>Estimated Consumption</h3>
+        <p style={styles.info}>Area: {((screenWidth / 1000) * (screenHeight / 1000)).toFixed(2)} m²</p>
+        <p style={styles.info}>{selectedPanelObj?.name} ({selectedPanelObj?.wattPerM2} W/m²)</p>
+        <p style={{ ...styles.info, fontWeight: 'bold' }}>Total: {consumption.toFixed(2)} W</p>
       </div>
-      
-      <div style={{ marginTop: '20px' }}>
-        <h3 style={subHeadingStyle}>Cell Summary</h3>
-        <div style={infoStyle}>
-          <strong>Standard:</strong>
-          <ul style={listStyle}>
-            {Object.entries(standardSummary).map(([size, count]) => (
-              <li key={size}>{size}: {count}</li>
-            ))}
-          </ul>
-        </div>
-        <div style={infoStyle}>
-          <strong>Custom:</strong>
-          <ul style={listStyle}>
-            {Object.entries(customSummary).map(([size, count]) => (
-              <li key={size}>{size}: {count}</li>
-            ))}
-          </ul>
-        </div>
-        {Object.keys(missingSummary).length > 0 && (
-          <div style={infoStyle}>
-            <strong>Missing:</strong>
-            <ul style={listStyle}>
-              {Object.entries(missingSummary).map(([size, count]) => (
-                <li key={size}>{size}: {count}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+
+      <div style={styles.block}>
+        <h3>Case Summary</h3>
+        <SummaryList title="Standard" summary={stdSum} />
+        <SummaryList title="Cut" summary={cutSum} />
       </div>
     </div>
   );
-}
+};
+
+const SummaryList = ({ title, summary }) => {
+  return (
+    <div style={styles.info}>
+      <strong>{title}:</strong>
+      <ul style={styles.list}>
+        {Object.entries(summary).map(([size, count]) => (
+          <li key={size}>{size}: {count}</li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+const styles = {
+  container: {
+    fontFamily: 'Arial, sans-serif',
+    color: '#fff',
+    backgroundColor: '#222',
+    padding: '20px',
+    borderRadius: '8px',
+    maxWidth: '960px',
+    margin: '20px auto'
+  },
+  heading: { borderBottom: '2px solid #555', paddingBottom: '5px' },
+  controls: { display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '10px' },
+  label: { fontSize: '14px', display: 'flex', flexDirection: 'column' },
+  input: {
+    padding: '5px 10px',
+    borderRadius: '4px',
+    border: '1px solid #555',
+    backgroundColor: '#333',
+    color: '#fff',
+    marginTop: '5px'
+  },
+  svg: { border: '1px solid #555', background: '#333', margin: '20px auto', display: 'block' },
+  warning: { color: '#ff4d4d', fontWeight: 'bold', fontSize: '16px' },
+  info: { margin: '5px 0', fontSize: '16px' },
+  list: { paddingLeft: '18px' },
+  block: { backgroundColor: '#333', padding: '12px', borderRadius: '6px', marginTop: '15px' }
+};
 
 export default GridOptimizer;
