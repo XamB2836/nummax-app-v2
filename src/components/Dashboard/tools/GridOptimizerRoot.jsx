@@ -1,8 +1,6 @@
 import React, { useState } from "react"
-import { GridOptimizerTool } from "./GridOptimizerTool"
-import { GridOptimizerOut } from "./GridOptimizerOut"
-import { NativeSelect } from "@/components/dashboard/ui/native-select"
-
+import { IndoorOptimizer } from "@/components/Dashboard/tools/IndoorOptimizer"
+import { OutdoorOptimizer } from "@/components/Dashboard/tools/OutdoorOptimizer"
 export function GridOptimizerRoot() {
   const [mode, setMode] = useState("indoor")
 
@@ -12,19 +10,19 @@ export function GridOptimizerRoot() {
         <h1 className="text-3xl font-bold tracking-tight">Grid Optimizer</h1>
         <p className="text-muted-foreground">Switch between Indoor and Outdoor optimization modes</p>
         <div className="w-48 mt-2">
-          <NativeSelect
+          <select
+            className="w-full h-10 px-3 py-2 rounded-md border bg-background text-foreground text-sm shadow-sm"
             value={mode}
-            onChange={setMode}
-            options={[
-              { value: "indoor", label: "Indoor" },
-              { value: "outdoor", label: "Outdoor" },
-            ]}
-          />
+            onChange={(e) => setMode(e.target.value)}
+          >
+            <option value="indoor">Indoor</option>
+            <option value="outdoor">Outdoor</option>
+          </select>
         </div>
       </div>
 
-      {mode === "indoor" && <GridOptimizerTool />}
-      {mode === "outdoor" && <GridOptimizerOut />}
+      {mode === "indoor" && <IndoorOptimizer />}
+      {mode === "outdoor" && <OutdoorOptimizer />}
     </div>
   )
 }
