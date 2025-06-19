@@ -2,7 +2,8 @@
 
 import { cn } from "@/lib/utils"
 import { DashboardTool } from "@/components/Dashboard/tools/dashboard-tool"
-import { GridOptimizerTool } from "@/components/Dashboard/tools/test"
+import { IndoorOptimizerTool } from "@/components/Dashboard/tools/indoor-optimizer"
+import { OutdoorOptimizerTool } from "@/components/Dashboard/tools/outdoor-optimizer"
 
 /* ========= ADD TOOL FUNCTION HERE =========  */
 export function Workspace({ collapsed, activeTool }) {
@@ -10,8 +11,10 @@ export function Workspace({ collapsed, activeTool }) {
     switch (activeTool) {
       case "dashboard":
         return <DashboardTool />
-        case "test":
-          return <GridOptimizerTool/>
+      case "indoor":
+        return <IndoorOptimizerTool />
+      case "outdoor":
+        return <OutdoorOptimizerTool />
     }
   }
 
