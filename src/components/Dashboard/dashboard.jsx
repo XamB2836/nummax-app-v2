@@ -7,7 +7,7 @@ import { Workspace } from "@/components/Dashboard/workspace"
 
 export function Dashboard() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [activeTool, setActiveTool] = useState("dashboard")
+  const [activeTool, setActiveTool] = useState("optimizer")
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed)

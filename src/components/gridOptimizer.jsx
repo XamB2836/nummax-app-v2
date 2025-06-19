@@ -152,11 +152,7 @@ const styles = {
   container: {
     fontFamily: 'Arial, sans-serif',
     color: '#fff',
-    backgroundColor: '#222',
-    padding: '20px',
-    borderRadius: '8px',
-    maxWidth: '960px',
-    margin: '20px auto'
+    padding: '20px'
   },
   heading: { borderBottom: '2px solid #555', paddingBottom: '5px' },
   controls: { display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '10px' },
