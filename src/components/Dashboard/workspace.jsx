@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { DashboardTool } from "@/components/Dashboard/tools/dashboard-tool"
-import { GridOptimizerTool } from "@/components/Dashboard/tools/test"
+import { GridOptimizerTool } from "@/components/Dashboard/tools/IndoorOptimizer"
 
 /* ========= ADD TOOL FUNCTION HERE =========  */
 export function Workspace({ collapsed, activeTool }) {
