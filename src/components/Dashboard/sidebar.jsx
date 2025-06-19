@@ -1,6 +1,6 @@
 "use client"
 
-import { LayoutDashboard, Grid2x2Check } from "lucide-react"
+import { LayoutDashboard, BarChart3, Calendar, Users, FileText, Settings, HelpCircle, Grid2x2Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/Dashboard/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/Dashboard/ui/tooltip"
@@ -39,9 +39,8 @@ function SidebarItem({ icon: Icon, label, active, collapsed, onClick }) {
 /* ====  ADD TOOLS TO SIDEBAR ==== */
 export function Sidebar({ collapsed, activeTool, setActiveTool }) {
   const tools = [
-    { type: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { type: "indoor", label: "Indoor Optimizer", icon: Grid2x2Check },
-    { type: "outdoor", label: "Outdoor Optimizer", icon: Grid2x2Check }
+    { type: "dashboard", label: "GridOptimizer", icon: Grid2x2Check },
+    { type: "test", label: "Test", icon: HelpCircle}
 
   ]
 
