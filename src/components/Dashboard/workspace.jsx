@@ -1,24 +1,19 @@
 "use client"
 
+import React from "react"
 import { cn } from "@/lib/utils"
-import { DashboardTool } from "@/components/Dashboard/tools/dashboard-tool"
-import { GridOptimizerTool } from "@/components/Dashboard/tools/IndoorOptimizer"
+import { GridOptimizerRoot } from "@/components/Dashboard/tools/GridOptimizerRoot"
 
-/* ========= ADD TOOL FUNCTION HERE =========  */
 export function Workspace({ collapsed, activeTool }) {
-  const renderTool = () => {
-    switch (activeTool) {
-      case "dashboard":
-        return <DashboardTool />
-        case "test":
-          return <GridOptimizerTool/>
-    }
-  }
-
+  // Always render the GridOptimizerRoot, regardless of activeTool
   return (
-    <main className={cn("workspace-transition flex-1 overflow-auto p-6 bg-[#121212]", collapsed ? "ml-16" : "ml-64")}>
-      {renderTool()}
+    <main
+      className={cn(
+        "workspace-transition flex-1 overflow-auto p-6 bg-[#121212]",
+        collapsed ? "ml-16" : "ml-64"
+      )}
+    >
+      <GridOptimizerRoot />
     </main>
   )
 }
-

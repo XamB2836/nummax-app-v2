@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState } from "react"
 import {
   Card,
@@ -5,40 +7,42 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/dashboard/ui/card"
-import { Input } from "@/components/dashboard/ui/input"
-import * as Select from "@radix-ui/react-select"
-import { Check, ChevronDown, ChevronUp } from "lucide-react"
-import { LED_STANDARD, LED_ROTATED, ledPanels } from '@/lib/OptimizerCore'
-import { chooseBestLayout } from '@/lib/LayoutEngine'
-import { calculateConsumption } from '@/lib/consumptionCalculator'
-import { validateScreenDimensions } from '@/lib/InputHandler'
-import { generateCaseSummary } from '@/lib/caseSummary'
-import { RenderCell } from '@/lib/CaseRenderer'
+} from "@/components/Dashboard/ui/card"
+import { Input } from "@/components/Dashboard/ui/input"
+import { LED_STANDARD, LED_ROTATED, ledPanels } from "@/lib/OptimizerCore"
+import { chooseBestLayout } from "@/lib/LayoutEngine"
+import { calculateConsumption } from "@/lib/consumptionCalculator"
+import { validateScreenDimensions } from "@/lib/InputHandler"
+import { generateCaseSummary } from "@/lib/caseSummary"
+import { RenderCell } from "@/lib/CaseRenderer"
 
-export function GridOptimizerTool() {
+export function IndoorOptimizer() {
   const [screenWidth, setScreenWidth] = useState(1120)
   const [screenHeight, setScreenHeight] = useState(640)
   const [selectedPanel, setSelectedPanel] = useState(ledPanels[0].id)
-  const [modeOverride, setModeOverride] = useState("auto")
+  const [layoutMode, setLayoutMode] = useState("auto")
 
-  const { valid: dimsValid, warning: dimsWarning } = validateScreenDimensions(screenWidth, screenHeight)
-  const { layout, mode } = chooseBestLayout(screenWidth, screenHeight, modeOverride === "auto" ? null : modeOverride)
+  const { valid, warning } = validateScreenDimensions(screenWidth, screenHeight)
+  const { layout, mode } = chooseBestLayout(
+    screenWidth,
+    screenHeight,
+    layoutMode === "auto" ? null : layoutMode
+  )
   const ledModule = mode === "standard" ? LED_ROTATED : LED_STANDARD
-  const selectedPanelObj = ledPanels.find((p) => p.id === selectedPanel)
-  const consumption = selectedPanelObj ? calculateConsumption(screenWidth, screenHeight, selectedPanelObj.wattPerM2) : 0
+  const panelObj = ledPanels.find((p) => p.id === selectedPanel)
+  const consumption = panelObj
+    ? calculateConsumption(screenWidth, screenHeight, panelObj.wattPerM2)
+    : 0
+
   const totalModules = [...layout.standardCases, ...(layout.cutCases || [])].reduce(
-    (sum, c) => sum + ((c.width / ledModule.width) * (c.height / ledModule.height)),
+    (sum, c) => sum + (c.width / ledModule.width) * (c.height / ledModule.height),
     0
   )
 
-  const scale = 0.2
-  const colorMap = {
-    standard: "green",
-    cut: "orange",
-  }
   const stdSum = generateCaseSummary(layout.standardCases)
   const cutSum = generateCaseSummary(layout.cutCases || [])
+  const scale = 0.2
+  const colorMap = { standard: "green", cut: "orange" }
 
   return (
     <div className="space-y-6">
@@ -50,7 +54,7 @@ export function GridOptimizerTool() {
       <Card>
         <CardHeader>
           <CardTitle>Screen Parameters</CardTitle>
-          <CardDescription>Set the screen dimensions and LED panel type.</CardDescription>
+          <CardDescription>Set screen dimensions and LED panel type</CardDescription>
         </CardHeader>
         <CardContent className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
@@ -63,48 +67,50 @@ export function GridOptimizerTool() {
           </div>
           <div>
             <label className="text-sm font-medium">LED Panel</label>
-            <NativeSelect value={selectedPanel} onChange={setSelectedPanel} options={ledPanels.map(p => ({ value: p.id, label: `${p.name} (${p.wattPerM2} W/m²)` }))} />
+            <select
+              className="w-full h-10 px-3 py-2 rounded-md border bg-background text-foreground text-sm shadow-sm"
+              value={selectedPanel}
+              onChange={(e) => setSelectedPanel(e.target.value)}
+            >
+              {ledPanels.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({p.wattPerM2} W/m²)
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="text-sm font-medium">Layout Mode</label>
-            <NativeSelect value={modeOverride} onChange={setModeOverride} options={[{ value: "auto", label: "Auto" }, { value: "standard", label: "Force Standard" }, { value: "rotated", label: "Force Rotated" }]} />
+            <select
+              className="w-full h-10 px-3 py-2 rounded-md border bg-background text-foreground text-sm shadow-sm"
+              value={layoutMode}
+              onChange={(e) => setLayoutMode(e.target.value)}
+            >
+              <option value="auto">Auto</option>
+              <option value="standard">Force Standard</option>
+              <option value="rotated">Force Rotated</option>
+            </select>
           </div>
         </CardContent>
       </Card>
 
-      {(layout.warning || dimsWarning) && (
-        <p className="text-destructive font-semibold">{layout.warning || dimsWarning}</p>
-      )}
+      {warning && <p className="text-destructive font-semibold">{warning}</p>}
 
       <Card>
         <CardHeader>
           <CardTitle>Layout Result</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p>Selected Mode: <strong>{mode}</strong></p>
-          <p>LED Module: {ledModule.width} × {ledModule.height}</p>
+          <p>Mode: <strong>{mode}</strong></p>
+          <p>LED Module Size: {ledModule.width}×{ledModule.height}</p>
           <p>Total Modules: {totalModules.toFixed(1)}</p>
 
-          <svg width={(screenWidth * scale) + 1} height={(screenHeight * scale) + 1} className="mx-auto border bg-muted">
+          <svg width={(screenWidth*scale)+1} height={(screenHeight*scale)+1} className="mx-auto border bg-muted">
             {layout.standardCases.map((cell, i) => (
-              <RenderCell
-                key={`std-${i}`}
-                cell={cell}
-                scale={scale}
-                moduleWidth={ledModule.width}
-                moduleHeight={ledModule.height}
-                fillColor={colorMap[cell.type]}
-              />
+              <RenderCell key={`std-${i}`} cell={cell} scale={scale} moduleWidth={ledModule.width} moduleHeight={ledModule.height} fillColor={colorMap[cell.type]} />
             ))}
-            {(layout.cutCases || []).map((cell, i) => (
-              <RenderCell
-                key={`cut-${i}`}
-                cell={cell}
-                scale={scale}
-                moduleWidth={ledModule.width}
-                moduleHeight={ledModule.height}
-                fillColor={colorMap[cell.type]}
-              />
+            {layout.cutCases?.map((cell, i) => (
+              <RenderCell key={`cut-${i}`} cell={cell} scale={scale} moduleWidth={ledModule.width} moduleHeight={ledModule.height} fillColor={colorMap[cell.type]} />
             ))}
           </svg>
         </CardContent>
@@ -114,11 +120,11 @@ export function GridOptimizerTool() {
         <Card>
           <CardHeader>
             <CardTitle>Estimated Consumption</CardTitle>
-            <CardDescription>Based on screen size and selected panel</CardDescription>
+            <CardDescription>Based on screen size and panel</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p>Area: {((screenWidth / 1000) * (screenHeight / 1000)).toFixed(2)} m²</p>
-            <p>Panel: {selectedPanelObj?.name} ({selectedPanelObj?.wattPerM2} W/m²)</p>
+            <p>Area: {((screenWidth/1000)*(screenHeight/1000)).toFixed(2)} m²</p>
+            <p>Panel: {panelObj?.name} ({panelObj?.wattPerM2} W/m²)</p>
             <p className="font-semibold">Total: {consumption.toFixed(2)} W</p>
           </CardContent>
         </Card>
@@ -132,57 +138,18 @@ export function GridOptimizerTool() {
             <CaseSummary title="Cut" summary={cutSum} />
           </CardContent>
         </Card>
-</div>
 
-<Card>
-  <CardHeader>
-    <CardTitle>Total Modules</CardTitle>
-    <CardDescription>Total number of modules in the layout</CardDescription>
-  </CardHeader>
-  <CardContent className="space-y-2">
-    <p className="text-sm">Module Dimensions: {ledModule.width} x {ledModule.height} mm</p>
-    <p className="text-lg font-semibold">Total Modules: {totalModules.toFixed(1)}</p>
-  </CardContent>
-</Card>
-
-</div>
-  )
-}
-
-function NativeSelect({ value, onChange, options }) {
-  return (
-    <Select.Root value={value} onValueChange={onChange}>
-      <Select.Trigger className="inline-flex items-center justify-between h-10 px-3 w-full rounded-md border bg-background text-sm shadow-sm">
-        <Select.Value placeholder="Select..." />
-        <Select.Icon>
-          <ChevronDown className="h-4 w-4 opacity-50" />
-        </Select.Icon>
-      </Select.Trigger>
-      <Select.Portal>
-        <Select.Content className="bg-popover border shadow-md rounded-md z-50 text-popover-foreground">
-          <Select.ScrollUpButton className="flex items-center justify-center h-6">
-            <ChevronUp className="h-4 w-4" />
-          </Select.ScrollUpButton>
-          <Select.Viewport className="p-1">
-            {options.map((opt) => (
-              <Select.Item
-                key={opt.value}
-                value={opt.value}
-                className="relative px-2 py-1.5 text-sm rounded-sm cursor-pointer hover:bg-accent text-foreground focus:bg-accent focus:text-accent-foreground"
-              >
-                <Select.ItemText>{opt.label}</Select.ItemText>
-                <Select.ItemIndicator className="absolute right-2">
-                  <Check className="h-4 w-4" />
-                </Select.ItemIndicator>
-              </Select.Item>
-            ))}
-          </Select.Viewport>
-          <Select.ScrollDownButton className="flex items-center justify-center h-6">
-            <ChevronDown className="h-4 w-4" />
-          </Select.ScrollDownButton>
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
+        <Card>
+          <CardHeader>
+            <CardTitle>Total Modules</CardTitle>
+            <CardDescription>Total modules placed</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-lg font-semibold">{totalModules.toFixed(1)}</p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }
 
