@@ -10,5 +10,5 @@ export function validateScreenDimensions(width, height) {
     ? null
     : "⚠ Screen dimensions are not divisible by LED module size (320x160).";
 
-  return { valid: true, warning };
+  return { valid: perfectFit, warning };
 }
