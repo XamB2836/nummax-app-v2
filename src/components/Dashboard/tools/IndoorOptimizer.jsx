@@ -176,29 +176,8 @@ export function IndoorOptimizer() {
               <CardContent className="text-center">
                 <p className="text-2xl font-bold">{consumption.toFixed(2)} W</p>
                 <p className="text-sm text-muted-foreground">
-                  Surface Area =  {areaM2} m²
+                  Area =  {areaM2} m²
                 </p>
-              </CardContent>
-            </Card>
-
-            {/* Case Summary Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Case Summary :</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="text-center list-disc list-inside text-1xl font-bold space-y-5">
-                  {Object.entries(stdSum).map(([size, count]) => (
-                    <li key={size}>
-                      {size}: {count}
-                    </li>
-                  ))}
-                  {Object.entries(cutSum).map(([size, count]) => (
-                    <li key={size}>
-                      {size}: {count}
-                    </li>
-                  ))}
-                </ul>
               </CardContent>
             </Card>
 
@@ -214,6 +193,28 @@ export function IndoorOptimizer() {
                 <p className="text-sm text-muted-foreground">
                   Modules placés
                 </p>
+              </CardContent>
+            </Card>
+
+
+            {/* Case Summary Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Case Summary :</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="text-center list-disc list-inside text-2xl font-bold space-y-5">
+                  {Object.entries(stdSum).map(([size, count]) => (
+                    <li key={size}>
+                      {size}: {count}
+                    </li>
+                  ))}
+                  {Object.entries(cutSum).map(([size, count]) => (
+                    <li key={size}>
+                      {size}: {count}
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
           </div>
