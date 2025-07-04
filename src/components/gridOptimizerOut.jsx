@@ -5,8 +5,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/dashboard/ui/card"
-import { Input } from "@/components/dashboard/ui/input"
+} from "@/components/Dashboard/ui/card"
+import { Input } from "@/components/Dashboard/ui/input"
 import * as Select from "@radix-ui/react-select"
 import { Check, ChevronDown, ChevronUp } from "lucide-react"
 import { calculateConsumption } from '@/lib/consumptionCalculator'

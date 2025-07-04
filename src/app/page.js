@@ -3,10 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 
 
-//import WattageCalculator from "@/components/wattageCalculator";
-import GridOptimiser from "@/components/gridOptimizer";
-import { Dashboard } from "@/components/Dashboard/dashboard";
-import { GridOptimizerRoot } from "@/components/Dashboard/tools/GridOptimizerRoot"
+
+import {Dashboard} from '@/components/Dashboard/dashboard';
 
 export default function Home() {
 
