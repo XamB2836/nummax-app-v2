@@ -68,13 +68,6 @@
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
-  },
-  "overrides": {
-  "next-theme": "npm:next-themes@^0.4.6"
-  },
-  "engines": {
-  "node": "22.x"
   }
-
 }
  
