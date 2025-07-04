@@ -73,7 +73,7 @@
   "next-theme": "npm:next-themes@^0.4.6"
   },
   "engines": {
-  "node": "18.x"
+  "node": "22.x"
   }
 
 }
