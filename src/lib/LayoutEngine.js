@@ -1,7 +1,6 @@
 // /lib/LayoutEngine.js
 
 import { computeAdvancedLayout } from './OptimizerCore';
-import indoorCases from '../data/cases/indoor.json';
 
 export function scoreLayout(layout) {
   const fullArea = layout.standardCases.reduce((sum, c) => sum + c.width * c.height, 0);
@@ -21,9 +20,11 @@ function moduleFitLoss(width, height, modW, modH) {
   return width * height - usedW * usedH;
 }
 
-function caseOrientationLoss(modW, modH) {
-  const cases = indoorCases.standard;
-  return cases.reduce((sum, c) => sum + moduleFitLoss(c.width, c.height, modW, modH), 0);
+function layoutCaseLoss(layout, modW, modH) {
+  return layout.standardCases.reduce(
+    (sum, c) => sum + moduleFitLoss(c.width, c.height, modW, modH),
+    0,
+  );
 }
 
 export function computeLayoutVariants(screenWidth, screenHeight, module) {
@@ -67,8 +68,16 @@ export function chooseBestLayout(screenWidth, screenHeight, module, modeOverride
     module.width,
   );
 
-  const caseLossStandard = caseOrientationLoss(module.width, module.height);
-  const caseLossRotated = caseOrientationLoss(module.height, module.width);
+  const caseLossStandard = layoutCaseLoss(
+    layouts.standard.layout,
+    module.width,
+    module.height,
+  );
+  const caseLossRotated = layoutCaseLoss(
+    layouts.rotated.layout,
+    module.height,
+    module.width,
+  );
 
   const cutsStandard = layouts.standard.layout.cutCases.length;
   const cutsRotated = layouts.rotated.layout.cutCases.length;
