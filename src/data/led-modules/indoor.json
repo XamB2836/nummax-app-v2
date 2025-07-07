@@ -1,0 +1,4 @@
+[
+  { "width": 320, "height": 160, "label": "standard" },
+  { "width": 160, "height": 320, "label": "rotated" }
+]
