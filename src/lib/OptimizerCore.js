@@ -47,7 +47,9 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   const CASE_B_H = indoorCases.standard.find((c) => c.label === 'B-H');
   const CASE_B_V = indoorCases.standard.find((c) => c.label === 'B-V');
 
-  const caseFits = (c) => c.width % moduleW === 0 && c.height % moduleH === 0;
+  const caseFits = (c) =>
+    (c.width % moduleW === 0 && c.height % moduleH === 0) ||
+    (c.width % moduleH === 0 && c.height % moduleW === 0);
 
   const stdCases = [CASE_A, CASE_B_H, CASE_B_V].filter((c) => c && caseFits(c));
   const cutCases = [SLICED_A_HALF, SLICED_A_THIRD].filter((c) => c && caseFits(c));
