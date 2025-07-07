@@ -8,10 +8,6 @@ export function getModuleById(id) {
   return indoorLedModules.find((m) => m.id === id);
 }
 
-// === MODULE COUNT CALC ===
-export function computeModuleCount(cell, moduleW, moduleH) {
-  return (cell.width / moduleW) * (cell.height / moduleH);
-}
 
 // === ROTATED LAYOUT TRANSFORM ===
 export function transformLayout(layout, containerWidth) {

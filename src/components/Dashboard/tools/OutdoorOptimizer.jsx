@@ -8,7 +8,7 @@ import {
 } from "@/components/Dashboard/ui/card"
 import { Input } from "@/components/Dashboard/ui/input"
 import { validateScreenDimensions } from "@/lib/InputHandler"
-import { RenderCell } from "@/lib/CaseRenderer"
+import { RenderCell, ModuleGridLines } from "@/lib/CaseRenderer"
 import { computeOutdoorLayout, OUTDOOR_LED_MODULE } from "@/lib/OutdoorLayoutEngine"
 
 export function OutdoorOptimizer() {
@@ -76,11 +76,16 @@ export function OutdoorOptimizer() {
                 key={i}
                 cell={cell}
                 scale={scale}
-                moduleWidth={OUTDOOR_LED_MODULE.width}
-                moduleHeight={OUTDOOR_LED_MODULE.height}
                 fillColor="green"
               />
             ))}
+            <ModuleGridLines
+              width={screenWidth}
+              height={screenHeight}
+              moduleWidth={OUTDOOR_LED_MODULE.width}
+              moduleHeight={OUTDOOR_LED_MODULE.height}
+              scale={scale}
+            />
           </svg>
         </CardContent>
       </Card>

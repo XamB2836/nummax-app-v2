@@ -20,18 +20,38 @@ export function CaseRectangle({ cell, scale, fillColor, strokeColor = 'white' })
   );
 }
 
-export function SubdivisionLines({ cell, scale, moduleWidth, moduleHeight }) {
+export function ModuleGridLines({ width, height, moduleWidth, moduleHeight, scale }) {
   const lines = [];
 
-  for (let x = cell.x + moduleWidth; x < cell.x + cell.width; x += moduleWidth) {
-    lines.push(<line key={`v-${x}`} x1={x * scale} y1={cell.y * scale} x2={x * scale} y2={(cell.y + cell.height) * scale} stroke="white" strokeWidth="1" />);
+  for (let x = moduleWidth; x < width; x += moduleWidth) {
+    lines.push(
+      <line
+        key={`gv-${x}`}
+        x1={x * scale}
+        y1={0}
+        x2={x * scale}
+        y2={height * scale}
+        stroke="white"
+        strokeWidth="1"
+      />
+    );
   }
 
-  for (let y = cell.y + moduleHeight; y < cell.y + cell.height; y += moduleHeight) {
-    lines.push(<line key={`h-${y}`} x1={cell.x * scale} y1={y * scale} x2={(cell.x + cell.width) * scale} y2={y * scale} stroke="white" strokeWidth="1" />);
+  for (let y = moduleHeight; y < height; y += moduleHeight) {
+    lines.push(
+      <line
+        key={`gh-${y}`}
+        x1={0}
+        y1={y * scale}
+        x2={width * scale}
+        y2={y * scale}
+        stroke="white"
+        strokeWidth="1"
+      />
+    );
   }
 
-  return lines;
+  return <g>{lines}</g>;
 }
 
 export function CaseLabel({ cell, scale }) {
@@ -49,13 +69,10 @@ export function CaseLabel({ cell, scale }) {
   );
 }
 
-export function RenderCell({ cell, scale, moduleWidth, moduleHeight, fillColor }) {
+export function RenderCell({ cell, scale, fillColor }) {
   return (
     <g>
       <CaseRectangle cell={cell} scale={scale} fillColor={fillColor} />
-      {cell.type !== 'missing' && (
-        <SubdivisionLines cell={cell} scale={scale} moduleWidth={moduleWidth} moduleHeight={moduleHeight} />
-      )}
       <CaseLabel cell={cell} scale={scale} />
     </g>
   );

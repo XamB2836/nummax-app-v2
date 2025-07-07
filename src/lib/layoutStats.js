@@ -1,9 +1,12 @@
 // /lib/layoutStats.js
-import { computeModuleCount } from './OptimizerCore'
-
-export function countModules(layout, moduleWidth, moduleHeight) {
-  return [...layout.standardCases, ...(layout.cutCases || [])]
-    .reduce((sum, cell) => sum + computeModuleCount(cell, moduleWidth, moduleHeight), 0)
+export function countModules(layout, screenW, screenH, moduleW, moduleH) {
+  let count = 0
+  for (let y = 0; y + moduleH <= screenH; y += moduleH) {
+    for (let x = 0; x + moduleW <= screenW; x += moduleW) {
+      count++
+    }
+  }
+  return count
 }
 
 export function computeAreaM2(widthMM, heightMM) {
