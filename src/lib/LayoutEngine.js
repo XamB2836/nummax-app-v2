@@ -1,60 +1,40 @@
 // /lib/LayoutEngine.js
 
 import {
-    LED_STANDARD,
-    LED_ROTATED,
-    computeAdvancedLayout,
-    transformLayout,
-    computeModuleCount
-  } from './OptimizerCore';
-  
-  /**
-   * Score layout based on full vs cut cases
-   */
-  export function scoreLayout(layout, moduleW, moduleH) {
-    const fullArea = layout.standardCases.reduce((sum, c) => sum + c.width * c.height, 0);
-    const cutArea = layout.cutCases.reduce((sum, c) => sum + c.width * c.height, 0);
-    const totalCuts = layout.cutCases.length;
-  
-    // Weighted score
-    const score = (fullArea * 2) + (cutArea * 1) - (totalCuts * 3000); // Adjust weights if needed
-    return score;
+  computeAdvancedLayout,
+  transformLayout,
+} from './OptimizerCore';
+
+export function scoreLayout(layout) {
+  const fullArea = layout.standardCases.reduce((sum, c) => sum + c.width * c.height, 0);
+  const cutArea = layout.cutCases.reduce((sum, c) => sum + c.width * c.height, 0);
+  const totalCuts = layout.cutCases.length;
+  return (fullArea * 2) + cutArea - (totalCuts * 3000);
+}
+
+export function computeLayoutVariants(screenWidth, screenHeight, module) {
+  const standardLayout = computeAdvancedLayout(screenWidth, screenHeight, module.width, module.height);
+  const rotatedLayout = transformLayout(
+    computeAdvancedLayout(screenHeight, screenWidth, module.width, module.height),
+    screenHeight
+  );
+
+  return {
+    standard: { layout: standardLayout },
+    rotated: { layout: rotatedLayout },
+  };
+}
+
+export function chooseBestLayout(screenWidth, screenHeight, module, modeOverride = null) {
+  const layouts = computeLayoutVariants(screenWidth, screenHeight, module);
+
+  if (modeOverride && layouts[modeOverride]) {
+    return { layout: layouts[modeOverride].layout, mode: modeOverride };
   }
-  
-  /**
-   * Generate both layout variants
-   */
-  export function computeLayoutVariants(screenWidth, screenHeight) {
-    const standardLayout = computeAdvancedLayout(screenWidth, screenHeight);
-    const rotatedLayout = transformLayout(computeAdvancedLayout(screenHeight, screenWidth), screenHeight);
-  
-    return {
-      standard: { layout: standardLayout },
-      rotated: { layout: rotatedLayout }
-    };
-  }
-  
-  /**
-   * Choose best layout by score
-   */
-  export function chooseBestLayout(screenWidth, screenHeight, modeOverride = null) {
-    const layouts = computeLayoutVariants(screenWidth, screenHeight);
-  
-    if (modeOverride && layouts[modeOverride]) {
-      return {
-        layout: layouts[modeOverride].layout,
-        mode: modeOverride
-      };
-    }
-  
-    const scoreStandard = scoreLayout(layouts.standard.layout, LED_ROTATED.width, LED_ROTATED.height);
-    const scoreRotated  = scoreLayout(layouts.rotated.layout, LED_STANDARD.width, LED_STANDARD.height);
-  
-    const bestMode = scoreStandard >= scoreRotated ? 'standard' : 'rotated';
-  
-    return {
-      layout: layouts[bestMode].layout,
-      mode: bestMode
-    };
-  }
-  
+
+  const scoreStandard = scoreLayout(layouts.standard.layout);
+  const scoreRotated = scoreLayout(layouts.rotated.layout);
+  const bestMode = scoreStandard >= scoreRotated ? 'standard' : 'rotated';
+
+  return { layout: layouts[bestMode].layout, mode: bestMode };
+}

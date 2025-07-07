@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/Dashboard/ui/card"
 import { Input } from "@/components/Dashboard/ui/input"
-import { LED_STANDARD, LED_ROTATED, ledPanels } from "@/lib/OptimizerCore"
+import { indoorLedModules, getModuleById } from "@/lib/OptimizerCore"
 import { chooseBestLayout } from "@/lib/LayoutEngine"
 import { countModules, computeAreaM2 } from "@/lib/layoutStats"
 import { calculateConsumption } from "@/lib/consumptionCalculator"
@@ -20,21 +20,25 @@ import { RenderCell } from "@/lib/CaseRenderer"
 export function IndoorOptimizer() {
   const [screenWidth, setScreenWidth] = useState(3360)
   const [screenHeight, setScreenHeight] = useState(3200)
-  const [selectedPanel, setSelectedPanel] = useState(ledPanels[0].id)
+  const [selectedModule, setSelectedModule] = useState(indoorLedModules[0].id)
   const [layoutMode, setLayoutMode] = useState("auto")
 
   // === calculate layout & module ===
+  const moduleObj = getModuleById(selectedModule)
   const { layout, mode } = chooseBestLayout(
     screenWidth,
     screenHeight,
+    moduleObj,
     layoutMode === "auto" ? null : layoutMode
   )
-  const ledModule = mode === "standard" ? LED_ROTATED : LED_STANDARD
+  const ledModule =
+    mode === "standard"
+      ? { width: moduleObj.width, height: moduleObj.height }
+      : { width: moduleObj.height, height: moduleObj.width }
 
   // === calculate stats ===
-  const panelObj = ledPanels.find((p) => p.id === selectedPanel)
-  const consumption = panelObj
-    ? calculateConsumption(screenWidth, screenHeight, panelObj.wattPerM2)
+  const consumption = moduleObj
+    ? calculateConsumption(screenWidth, screenHeight, moduleObj.wattPerM2)
     : 0
 
   const totalModules = countModules(layout, ledModule.width, ledModule.height)
@@ -89,10 +93,10 @@ export function IndoorOptimizer() {
             <label className="text-sm font-medium">LED Panel</label>
             <select
               className="w-full h-10 px-3 py-2 rounded-md border bg-background text-foreground text-sm shadow-sm"
-              value={selectedPanel}
-              onChange={(e) => setSelectedPanel(e.target.value)}
+              value={selectedModule}
+              onChange={(e) => setSelectedModule(e.target.value)}
             >
-              {ledPanels.map((p) => (
+              {indoorLedModules.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name} ({p.wattPerM2} W/m²)
                 </option>

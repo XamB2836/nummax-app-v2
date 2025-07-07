@@ -9,12 +9,17 @@ import {
 import { Input } from "@/components/Dashboard/ui/input"
 import { validateScreenDimensions } from "@/lib/InputHandler"
 import { RenderCell } from "@/lib/CaseRenderer"
-import { computeOutdoorLayout } from "@/lib/OutdoorLayoutEngine"
+import { computeOutdoorLayout, OUTDOOR_LED_MODULE } from "@/lib/OutdoorLayoutEngine"
 
 export function OutdoorOptimizer() {
   const [screenWidth, setScreenWidth] = useState(2880)
   const [screenHeight, setScreenHeight] = useState(2880)
-  const { warning } = validateScreenDimensions(screenWidth, screenHeight)
+  const { warning } = validateScreenDimensions(
+    screenWidth,
+    screenHeight,
+    OUTDOOR_LED_MODULE.width,
+    OUTDOOR_LED_MODULE.height
+  )
   const layout = computeOutdoorLayout(screenWidth, screenHeight).standardCases
   const scale = 0.2
 
@@ -71,8 +76,8 @@ export function OutdoorOptimizer() {
                 key={i}
                 cell={cell}
                 scale={scale}
-                moduleWidth={cell.width}
-                moduleHeight={cell.height}
+                moduleWidth={OUTDOOR_LED_MODULE.width}
+                moduleHeight={OUTDOOR_LED_MODULE.height}
                 fillColor="green"
               />
             ))}

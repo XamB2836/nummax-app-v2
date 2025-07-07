@@ -1,19 +1,12 @@
 // /lib/OptimizerCore.js
 
-// === LED MODULE CONFIG ===
-export const LED_STANDARD = { width: 320, height: 160 };
-export const LED_ROTATED = { width: 160, height: 320 };
+import ledModules from '../data/led-modules/indoor.json';
+import indoorCases from '../data/cases/indoor.json';
 
-// === CASE SIZES ===
-export const STANDARD_CASE_WIDTH = 1120;
-export const STANDARD_CASE_HEIGHT = 640;
-
-// === PANEL CONFIG ===
-export const ledPanels = [
-  { id: 'panel1', name: '2.5 GOB', wattPerM2: 550 },
-  { id: 'panel2', name: '1.25 Flex', wattPerM2: 290 },
-  { id: 'panel3', name: 'LED Panel C', wattPerM2: 200 }
-];
+export const indoorLedModules = ledModules;
+export function getModuleById(id) {
+  return indoorLedModules.find((m) => m.id === id);
+}
 
 // === MODULE COUNT CALC ===
 export function computeModuleCount(cell, moduleW, moduleH) {
@@ -28,51 +21,48 @@ export function transformLayout(layout, containerWidth) {
     width: cell.height,
     height: cell.width,
     type: cell.type,
-    label: cell.label || `${cell.width}x${cell.height}`
+    label: cell.label || `${cell.width}x${cell.height}`,
   });
 
   return {
     standardCases: layout.standardCases.map(transformCell),
     cutCases: layout.cutCases.map(transformCell),
     valid: layout.valid,
-    warning: layout.warning
+    warning: layout.warning,
   };
 }
 
 // === MAIN LAYOUT ENGINE (TRIPLE SWEEP MODE) ===
-export function computeAdvancedLayout(screenWidth, screenHeight) {
+export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, moduleH) {
   const layout = {
     standardCases: [],
     cutCases: [],
     valid: true,
-    warning: null
+    warning: null,
   };
 
-  const CASE_A = { width: 1120, height: 640, label: 'A' };
-  const SLICED_A_HALF = { width: 1120, height: 320, label: 'A-1/2' };
-  const SLICED_A_THIRD = { width: 1120, height: 160, label: 'A-1/4' };
-  const CASE_B_H = { width: 1280, height: 160, label: 'B-H' };
-  const CASE_B_V = { width: 160, height: 1280, label: 'B-V' };
+  const CASE_A = indoorCases.standard.find((c) => c.label === 'A');
+  const SLICED_A_HALF = indoorCases.cut.find((c) => c.label === 'A-1/2');
+  const SLICED_A_THIRD = indoorCases.cut.find((c) => c.label === 'A-1/4');
+  const CASE_B_H = indoorCases.standard.find((c) => c.label === 'B-H');
+  const CASE_B_V = indoorCases.standard.find((c) => c.label === 'B-V');
 
-  const bigCutSizes = [
-    { width: 1280, height: 160 },
-    { width: 160, height: 1280 },
-    { width: 1120, height: 320 },
-    { width: 1120, height: 160 },
-    { width: 960, height: 160 },
-    { width: 640, height: 160 }
-  ];
+  const bigCutSizes = indoorCases.cut.filter((c) =>
+    [
+      '1280x160',
+      '160x1280',
+      '1120x320',
+      '1120x160',
+      '960x160',
+      '640x160',
+    ].includes(`${c.width}x${c.height}`)
+  );
 
-  const smallTileSizes = [
-    { width: 320, height: 160 }
-  ];
+  const smallTileSizes = indoorCases.cut.filter((c) => c.width === 320 && c.height === 160);
 
-  const offsetSizes = [
-    { width: 160, height: 960 },
-    { width: 160, height: 640 },
-    { width: 160, height: 320 },
-    { width: 320, height: 160 }
-  ];
+  const offsetSizes = indoorCases.cut.filter((c) =>
+    ['160x960', '160x640', '160x320', '320x160'].includes(`${c.width}x${c.height}`)
+  );
 
   // === PHASE 1: Standard placements
   const fullA = placeRectBlocks(CASE_A, screenWidth, screenHeight, [], 'standard');
@@ -96,13 +86,13 @@ export function computeAdvancedLayout(screenWidth, screenHeight) {
   occupied.push(...bv.placed);
 
   // === PHASE 2: Grid Sweep – Priority Big Blocks
-  gridSweepFiller(layout.cutCases, occupied, screenWidth, screenHeight, bigCutSizes);
+  gridSweepFiller(layout.cutCases, occupied, screenWidth, screenHeight, bigCutSizes, moduleW, moduleH);
 
   // === PHASE 3: Grid Sweep – Small Filler Tiles
-  gridSweepFiller(layout.cutCases, occupied, screenWidth, screenHeight, smallTileSizes);
+  gridSweepFiller(layout.cutCases, occupied, screenWidth, screenHeight, smallTileSizes, moduleW, moduleH);
 
   // === PHASE 4: Offset Sweep – Misaligned Cuts (catch final edge zones)
-  gridOffsetSweepFiller(layout.cutCases, occupied, screenWidth, screenHeight, offsetSizes);
+  gridOffsetSweepFiller(layout.cutCases, occupied, screenWidth, screenHeight, offsetSizes, moduleW, moduleH);
 
   return layout;
 }
@@ -118,11 +108,12 @@ function placeRectBlocks(caseDef, maxW, maxH, existing = [], type = 'standard') 
       const x = c * caseDef.width;
       const y = r * caseDef.height;
 
-      const overlaps = existing.some(cell =>
-        x < cell.x + cell.width &&
-        x + caseDef.width > cell.x &&
-        y < cell.y + cell.height &&
-        y + caseDef.height > cell.y
+      const overlaps = existing.some(
+        (cell) =>
+          x < cell.x + cell.width &&
+          x + caseDef.width > cell.x &&
+          y < cell.y + cell.height &&
+          y + caseDef.height > cell.y
       );
 
       if (!overlaps) {
@@ -132,7 +123,7 @@ function placeRectBlocks(caseDef, maxW, maxH, existing = [], type = 'standard') 
           width: caseDef.width,
           height: caseDef.height,
           type,
-          label: caseDef.label
+          label: caseDef.label,
         };
         placed.push(block);
         existing.push(block);
@@ -144,17 +135,12 @@ function placeRectBlocks(caseDef, maxW, maxH, existing = [], type = 'standard') 
 }
 
 // === GRID SWEEP FILLER ===
-function gridSweepFiller(cutCases, occupied, maxW, maxH, cutSizes) {
-  const minW = LED_STANDARD.width;
-  const minH = LED_STANDARD.height;
+function gridSweepFiller(cutCases, occupied, maxW, maxH, cutSizes, moduleW, moduleH) {
+  const minW = moduleW;
+  const minH = moduleH;
 
   const isOccupied = (x, y, w, h) =>
-    occupied.some(cell =>
-      x < cell.x + cell.width &&
-      x + w > cell.x &&
-      y < cell.y + cell.height &&
-      y + h > cell.y
-    );
+    occupied.some((cell) => x < cell.x + cell.width && x + w > cell.x && y < cell.y + cell.height && y + h > cell.y);
 
   for (let y = 0; y + minH <= maxH; y += minH) {
     for (let x = 0; x + minW <= maxW; x += minW) {
@@ -167,7 +153,7 @@ function gridSweepFiller(cutCases, occupied, maxW, maxH, cutSizes) {
             width,
             height,
             type: 'cut',
-            label: `${width}x${height}`
+            label: `${width}x${height}`,
           };
           cutCases.push(cut);
           occupied.push(cut);
@@ -179,17 +165,13 @@ function gridSweepFiller(cutCases, occupied, maxW, maxH, cutSizes) {
 }
 
 // === OFFSET SWEEP FILLER ===
-function gridOffsetSweepFiller(cutCases, occupied, maxW, maxH, offsetSizes) {
+function gridOffsetSweepFiller(cutCases, occupied, maxW, maxH, offsetSizes, moduleW, moduleH) {
+  const step = Math.min(moduleW, moduleH);
   const isOccupied = (x, y, w, h) =>
-    occupied.some(cell =>
-      x < cell.x + cell.width &&
-      x + w > cell.x &&
-      y < cell.y + cell.height &&
-      y + h > cell.y
-    );
+    occupied.some((cell) => x < cell.x + cell.width && x + w > cell.x && y < cell.y + cell.height && y + h > cell.y);
 
-  for (let y = 0; y <= maxH - 160; y += 160) {
-    for (let x = 0; x <= maxW - 160; x += 160) {
+  for (let y = 0; y <= maxH - step; y += step) {
+    for (let x = 0; x <= maxW - step; x += step) {
       for (let block of offsetSizes) {
         const { width, height } = block;
         if (x + width <= maxW && y + height <= maxH && !isOccupied(x, y, width, height)) {
@@ -199,7 +181,7 @@ function gridOffsetSweepFiller(cutCases, occupied, maxW, maxH, offsetSizes) {
             width,
             height,
             type: 'cut',
-            label: `${width}x${height}`
+            label: `${width}x${height}`,
           };
           cutCases.push(cut);
           occupied.push(cut);

@@ -34,3 +34,10 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Data
+
+All predefined case sizes and LED module definitions can be found in the `src/data/` directory.
+Indoor and outdoor lists are separated to keep layouts organized. Indoor cases
+are split between `standard` and `cut` sizes. These JSON files are imported by
+the layout engines so updates are automatically reflected in the app.

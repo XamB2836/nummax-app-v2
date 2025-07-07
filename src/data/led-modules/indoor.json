@@ -1,0 +1,4 @@
+[
+  { "id": "indoor-320x160", "name": "320x160", "width": 320, "height": 160, "wattPerM2": 550 },
+  { "id": "indoor-160x160", "name": "160x160", "width": 160, "height": 160, "wattPerM2": 450 }
+]
