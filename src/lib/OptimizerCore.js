@@ -19,6 +19,7 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   };
 
   const CASE_A = indoorCases.standard.find((c) => c.label === 'A');
+  const CASE_A_ROT = indoorCases.standard.find((c) => c.label === 'A-R');
   const SLICED_A_HALF = indoorCases.cut.find((c) => c.label === 'A-1/2');
   const SLICED_A_THIRD = indoorCases.cut.find((c) => c.label === 'A-1/4');
   const CASE_B_H = indoorCases.standard.find((c) => c.label === 'B-H');
@@ -28,8 +29,12 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
     (c.width % moduleW === 0 && c.height % moduleH === 0) ||
     (c.width % moduleH === 0 && c.height % moduleW === 0);
 
-  const stdCases = [CASE_A, CASE_B_H, CASE_B_V].filter((c) => c && caseFits(c));
-  const cutCases = [SLICED_A_HALF, SLICED_A_THIRD].filter((c) => c && caseFits(c));
+  const stdCases = [CASE_A, CASE_A_ROT, CASE_B_H, CASE_B_V].filter(
+    (c) => c && caseFits(c)
+  );
+  const cutCases = [SLICED_A_HALF, SLICED_A_THIRD].filter(
+    (c) => c && caseFits(c)
+  );
 
   const bigCutSizes = indoorCases.cut
     .filter((c) => caseFits(c))
@@ -42,7 +47,9 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   const offsetSizes = indoorCases.cut.filter(
     (c) =>
       caseFits(c) &&
-      ['160x960', '160x640', '160x320', '320x160'].includes(`${c.width}x${c.height}`)
+      ['160x960', '160x640', '160x320', '320x160', '320x960'].includes(
+        `${c.width}x${c.height}`
+      )
   );
 
   // === PHASE 1: Standard placements

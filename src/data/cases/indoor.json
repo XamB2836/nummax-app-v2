@@ -1,16 +1,20 @@
 {
   "standard": [
     { "width": 1120, "height": 640, "label": "A" },
+    { "width": 640, "height": 1120, "label": "A-R" },
     { "width": 1280, "height": 160, "label": "B-H" },
     { "width": 160, "height": 1280, "label": "B-V" }
   ],
   "cut": [
     { "width": 1120, "height": 320, "label": "A-1/2" },
     { "width": 1120, "height": 160, "label": "A-1/4" },
+    { "width": 320, "height": 1120, "label": "A-1/2-R" },
+    { "width": 160, "height": 1120, "label": "A-1/4-R" },
     { "width": 1280, "height": 160 },
     { "width": 160, "height": 1280 },
     { "width": 960, "height": 160 },
     { "width": 960, "height": 320 },
+    { "width": 320, "height": 960 },
     { "width": 640, "height": 160 },
     { "width": 320, "height": 320 },
     { "width": 320, "height": 160 },
