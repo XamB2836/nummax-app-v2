@@ -39,7 +39,8 @@ function SidebarItem({ icon: Icon, label, active, collapsed, onClick }) {
 /* ====  ADD TOOLS TO SIDEBAR ==== */
 export function Sidebar({ collapsed, activeTool, setActiveTool }) {
   const tools = [
-    { type: "OptimizerTool", label: "Optimizertool", icon: Grid2x2Check}
+    { type: "OptimizerTool", label: "OptimizerTool", icon: Grid2x2Check}
+    
 
   ]
 
