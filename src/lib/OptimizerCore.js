@@ -22,14 +22,15 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   const CASE_A_ROT = indoorCases.standard.find((c) => c.label === 'A-R');
   const SLICED_A_HALF = indoorCases.cut.find((c) => c.label === 'A-1/2');
   const SLICED_A_THIRD = indoorCases.cut.find((c) => c.label === 'A-1/4');
-  const CASE_B_H = indoorCases.standard.find((c) => c.label === 'B-H');
   const CASE_B_V = indoorCases.standard.find((c) => c.label === 'B-V');
 
   const caseFits = (c) =>
     (c.width % moduleW === 0 && c.height % moduleH === 0) ||
     (c.width % moduleH === 0 && c.height % moduleW === 0);
 
-  const stdCases = [CASE_A, CASE_A_ROT, CASE_B_H, CASE_B_V].filter(
+  // B-H (1280x160) tends to stack vertically and leads to messy layouts
+  // so we exclude it from the default placement sweep
+  const stdCases = [CASE_A, CASE_A_ROT, CASE_B_V].filter(
     (c) => c && caseFits(c)
   );
   const cutCases = [SLICED_A_HALF, SLICED_A_THIRD].filter(
@@ -37,7 +38,9 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   );
 
   const bigCutSizes = indoorCases.cut
-    .filter((c) => caseFits(c))
+    .filter((c) =>
+      caseFits(c) && !(c.width === 1280 && c.height === 160)
+    )
     .sort((a, b) => b.width * b.height - a.width * a.height);
 
   const smallTileSizes = indoorCases.cut.filter(
