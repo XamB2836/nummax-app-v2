@@ -1,9 +1,6 @@
 // /lib/LayoutEngine.js
 
-import {
-  computeAdvancedLayout,
-  transformLayout,
-} from './OptimizerCore';
+import { computeAdvancedLayout } from './OptimizerCore';
 
 export function scoreLayout(layout) {
   const fullArea = layout.standardCases.reduce((sum, c) => sum + c.width * c.height, 0);
@@ -13,10 +10,18 @@ export function scoreLayout(layout) {
 }
 
 export function computeLayoutVariants(screenWidth, screenHeight, module) {
-  const standardLayout = computeAdvancedLayout(screenWidth, screenHeight, module.width, module.height);
-  const rotatedLayout = transformLayout(
-    computeAdvancedLayout(screenHeight, screenWidth, module.width, module.height),
-    screenHeight
+  const standardLayout = computeAdvancedLayout(
+    screenWidth,
+    screenHeight,
+    module.width,
+    module.height
+  );
+
+  const rotatedLayout = computeAdvancedLayout(
+    screenWidth,
+    screenHeight,
+    module.height,
+    module.width
   );
 
   return {

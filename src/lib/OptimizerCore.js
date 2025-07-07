@@ -9,25 +9,6 @@ export function getModuleById(id) {
 }
 
 
-// === ROTATED LAYOUT TRANSFORM ===
-export function transformLayout(layout, containerWidth) {
-  const transformCell = (cell) => ({
-    x: cell.y,
-    y: containerWidth - cell.x - cell.width,
-    width: cell.height,
-    height: cell.width,
-    type: cell.type,
-    label: cell.label || `${cell.width}x${cell.height}`,
-  });
-
-  return {
-    standardCases: layout.standardCases.map(transformCell),
-    cutCases: layout.cutCases.map(transformCell),
-    valid: layout.valid,
-    warning: layout.warning,
-  };
-}
-
 // === MAIN LAYOUT ENGINE (TRIPLE SWEEP MODE) ===
 export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, moduleH) {
   const layout = {
