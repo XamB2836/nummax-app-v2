@@ -1,11 +1,33 @@
 // /lib/OptimizerCore.js
 
-import ledModules from '../data/led-modules/indoor.json';
-import indoorCases from '../data/cases/indoor.json';
+import ledModules from '../data/led-modules/indoor.json' assert { type: 'json' };
+import indoorCases from '../data/cases/indoor.json' assert { type: 'json' };
 
 export const indoorLedModules = ledModules;
 export function getModuleById(id) {
   return indoorLedModules.find((m) => m.id === id);
+}
+
+export function computeModuleCount(cell, moduleW, moduleH) {
+  return (cell.width / moduleW) * (cell.height / moduleH);
+}
+
+export function transformLayout(layout, containerWidth) {
+  const transformCell = (cell) => ({
+    x: cell.y,
+    y: containerWidth - cell.x - cell.width,
+    width: cell.height,
+    height: cell.width,
+    type: cell.type,
+    label: cell.label || `${cell.width}x${cell.height}`,
+  });
+
+  return {
+    standardCases: layout.standardCases.map(transformCell),
+    cutCases: layout.cutCases.map(transformCell),
+    valid: layout.valid,
+    warning: layout.warning,
+  };
 }
 
 
@@ -19,58 +41,51 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   };
 
   const CASE_A = indoorCases.standard.find((c) => c.label === 'A');
-  const CASE_A_ROT = indoorCases.standard.find((c) => c.label === 'A-R');
   const SLICED_A_HALF = indoorCases.cut.find((c) => c.label === 'A-1/2');
   const SLICED_A_THIRD = indoorCases.cut.find((c) => c.label === 'A-1/4');
+  const CASE_B_H = indoorCases.standard.find((c) => c.label === 'B-H');
   const CASE_B_V = indoorCases.standard.find((c) => c.label === 'B-V');
 
-  const caseFits = (c) =>
-    (c.width % moduleW === 0 && c.height % moduleH === 0) ||
-    (c.width % moduleH === 0 && c.height % moduleW === 0);
+  const bigCutSizes = [
+    indoorCases.cut.find((c) => c.width === 1280 && c.height === 160),
+    indoorCases.cut.find((c) => c.width === 160 && c.height === 1280),
+    SLICED_A_HALF,
+    SLICED_A_THIRD,
+    indoorCases.cut.find((c) => c.width === 960 && c.height === 160),
+    indoorCases.cut.find((c) => c.width === 640 && c.height === 160),
+  ].filter(Boolean);
 
-  // B-H (1280x160) tends to stack vertically and leads to messy layouts
-  // so we exclude it from the default placement sweep
-  const stdCases = [CASE_A, CASE_A_ROT, CASE_B_V].filter(
-    (c) => c && caseFits(c)
-  );
-  const cutCases = [SLICED_A_HALF, SLICED_A_THIRD].filter(
-    (c) => c && caseFits(c)
-  );
+  const smallTileSizes = [
+    indoorCases.cut.find((c) => c.width === moduleW && c.height === moduleH),
+  ].filter(Boolean);
 
-  const bigCutSizes = indoorCases.cut
-    .filter(
-      (c) =>
-        caseFits(c) &&
-        !(c.width === 1280 && c.height === 160) &&
-        !(c.width === 160 && c.height === 1280)
-    )
-    .sort((a, b) => b.width * b.height - a.width * a.height);
-
-  const smallTileSizes = indoorCases.cut.filter(
-    (c) => c.width === moduleW && c.height === moduleH
-  );
-
-  const offsetSizes = indoorCases.cut.filter(
-    (c) =>
-      caseFits(c) &&
-      ['160x960', '160x640', '160x320', '320x160', '320x960'].includes(
-        `${c.width}x${c.height}`
-      )
-  );
+  const offsetSizes = [
+    indoorCases.cut.find((c) => c.width === 160 && c.height === 960),
+    indoorCases.cut.find((c) => c.width === 160 && c.height === 640),
+    indoorCases.cut.find((c) => c.width === 160 && c.height === 320),
+    indoorCases.cut.find((c) => c.width === 320 && c.height === 160),
+  ].filter(Boolean);
 
   // === PHASE 1: Standard placements
-  const occupied = [];
-  stdCases.forEach((def) => {
-    const placed = placeRectBlocks(def, screenWidth, screenHeight, occupied, 'standard');
-    layout.standardCases.push(...placed.placed);
-    occupied.push(...placed.placed);
-  });
+  const fullA = placeRectBlocks(CASE_A, screenWidth, screenHeight, [], 'standard');
+  layout.standardCases.push(...fullA.placed);
+  const occupied = [...layout.standardCases];
 
-  cutCases.forEach((def) => {
-    const placed = placeRectBlocks(def, screenWidth, screenHeight, occupied, 'cut');
-    layout.cutCases.push(...placed.placed);
-    occupied.push(...placed.placed);
-  });
+  const slicedHalf = placeRectBlocks(SLICED_A_HALF, screenWidth, screenHeight, occupied, 'cut');
+  layout.cutCases.push(...slicedHalf.placed);
+  occupied.push(...slicedHalf.placed);
+
+  const slicedThird = placeRectBlocks(SLICED_A_THIRD, screenWidth, screenHeight, occupied, 'cut');
+  layout.cutCases.push(...slicedThird.placed);
+  occupied.push(...slicedThird.placed);
+
+  const bh = placeRectBlocks(CASE_B_H, screenWidth, screenHeight, occupied, 'standard');
+  layout.standardCases.push(...bh.placed);
+  occupied.push(...bh.placed);
+
+  const bv = placeRectBlocks(CASE_B_V, screenWidth, screenHeight, occupied, 'standard');
+  layout.standardCases.push(...bv.placed);
+  occupied.push(...bv.placed);
 
   // === PHASE 2: Grid Sweep – Priority Big Blocks
   gridSweepFiller(layout.cutCases, occupied, screenWidth, screenHeight, bigCutSizes, moduleW, moduleH);

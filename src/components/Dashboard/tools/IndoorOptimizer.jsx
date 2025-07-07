@@ -15,7 +15,7 @@ import { countModules, computeAreaM2 } from "@/lib/layoutStats"
 import { calculateConsumption } from "@/lib/consumptionCalculator"
 import { DimensionValidator } from "@/lib/DimensionValidator"
 import { generateCaseSummary } from "@/lib/caseSummary"
-import { RenderCell, ModuleGridLines } from "@/lib/CaseRenderer"
+import { RenderCell } from "@/lib/CaseRenderer"
 
 export function IndoorOptimizer() {
   const [screenWidth, setScreenWidth] = useState(3360)
@@ -33,21 +33,15 @@ export function IndoorOptimizer() {
   )
   const ledModule =
     mode === "standard"
-      ? { width: moduleObj.width, height: moduleObj.height }
-      : { width: moduleObj.height, height: moduleObj.width }
+      ? { width: moduleObj.height, height: moduleObj.width }
+      : { width: moduleObj.width, height: moduleObj.height }
 
   // === calculate stats ===
   const consumption = moduleObj
     ? calculateConsumption(screenWidth, screenHeight, moduleObj.wattPerM2)
     : 0
 
-  const totalModules = countModules(
-    layout,
-    screenWidth,
-    screenHeight,
-    ledModule.width,
-    ledModule.height
-  )
+  const totalModules = countModules(layout, ledModule.width, ledModule.height)
 
   const stdSum = generateCaseSummary(layout.standardCases)
   const cutSum = generateCaseSummary(layout.cutCases || [])
@@ -155,13 +149,6 @@ export function IndoorOptimizer() {
                   fillColor={colorMap[cell.type]}
                 />
               ))}
-              <ModuleGridLines
-                width={screenWidth}
-                height={screenHeight}
-                moduleWidth={ledModule.width}
-                moduleHeight={ledModule.height}
-                scale={previewScale}
-              />
             </svg>
           </div>
 
