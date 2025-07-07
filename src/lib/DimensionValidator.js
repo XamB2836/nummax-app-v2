@@ -20,7 +20,9 @@ export function DimensionValidator({
     <div className={className}>
       <span className="w-2 h-2 rounded-full bg-red-500" />
       <span className="text-destructive font-semibold">
-        ⚠ Dimensions 
+        ⚠ Dimensions Should be multiples of module size
+        <br />
+        Width: {moduleWidth}mm, Height: {moduleHeight}mm  
       </span>
     </div>
   );

@@ -12,8 +12,8 @@ import { RenderCell } from "@/lib/CaseRenderer"
 import { computeOutdoorLayout } from "@/lib/OutdoorLayoutEngine"
 
 export function OutdoorOptimizer() {
-  const [screenWidth, setScreenWidth] = useState(1120)
-  const [screenHeight, setScreenHeight] = useState(640)
+  const [screenWidth, setScreenWidth] = useState(2880)
+  const [screenHeight, setScreenHeight] = useState(2880)
   const { warning } = validateScreenDimensions(screenWidth, screenHeight)
   const layout = computeOutdoorLayout(screenWidth, screenHeight).standardCases
   const scale = 0.2

@@ -1,6 +1,5 @@
-// /components/GridOptimizer.jsx
 
-"use client"; // 👈 Required if using Next.js App Router + client component
+"use client"; 
 
 const React = require("react");
 const { useState } = require("react");
