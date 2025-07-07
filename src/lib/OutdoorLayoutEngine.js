@@ -49,3 +49,6 @@ export function computeOutdoorLayout(screenWidth, screenHeight) {
 
   return layout;
 }
+
+// Backwards compatibility alias
+export const chooseOutdoorLayout = computeOutdoorLayout;
