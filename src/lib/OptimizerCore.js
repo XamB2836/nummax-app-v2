@@ -117,7 +117,8 @@ function gridSweepFiller(cutCases, occupied, maxW, maxH, cutSizes, moduleW, modu
     occupied.some((cell) => x < cell.x + cell.width && x + w > cell.x && y < cell.y + cell.height && y + h > cell.y);
 
   for (let y = 0; y + minH <= maxH; y += minH) {
-    for (let x = 0; x + minW <= maxW; x += minW) {
+    for (let x = 0; x + minW <= maxW;) {
+      let placed = false;
       for (let block of cutSizes) {
         const { width, height } = block;
         if (x + width <= maxW && y + height <= maxH && !isOccupied(x, y, width, height)) {
@@ -131,8 +132,13 @@ function gridSweepFiller(cutCases, occupied, maxW, maxH, cutSizes, moduleW, modu
           };
           cutCases.push(cut);
           occupied.push(cut);
+          x += width;
+          placed = true;
           break;
         }
+      }
+      if (!placed) {
+        x += minW;
       }
     }
   }
