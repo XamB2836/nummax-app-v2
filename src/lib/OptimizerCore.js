@@ -1,8 +1,11 @@
 // /lib/OptimizerCore.js
 
+import indoorModules from '../../data/led-modules/indoor.json';
+import indoorCases from '../../data/cases/indoor.json';
+
 // === LED MODULE CONFIG ===
-export const LED_STANDARD = { width: 320, height: 160 };
-export const LED_ROTATED = { width: 160, height: 320 };
+export const LED_STANDARD = indoorModules.find(m => m.label === 'standard');
+export const LED_ROTATED = indoorModules.find(m => m.label === 'rotated');
 
 // === CASE SIZES ===
 export const STANDARD_CASE_WIDTH = 1120;
@@ -48,31 +51,33 @@ export function computeAdvancedLayout(screenWidth, screenHeight) {
     warning: null
   };
 
-  const CASE_A = { width: 1120, height: 640, label: 'A' };
-  const SLICED_A_HALF = { width: 1120, height: 320, label: 'A-1/2' };
-  const SLICED_A_THIRD = { width: 1120, height: 160, label: 'A-1/4' };
-  const CASE_B_H = { width: 1280, height: 160, label: 'B-H' };
-  const CASE_B_V = { width: 160, height: 1280, label: 'B-V' };
+  const CASE_A = indoorCases.standard.find(c => c.label === 'A');
+  const SLICED_A_HALF = indoorCases.cut.find(c => c.label === 'A-1/2');
+  const SLICED_A_THIRD = indoorCases.cut.find(c => c.label === 'A-1/4');
+  const CASE_B_H = indoorCases.standard.find(c => c.label === 'B-H');
+  const CASE_B_V = indoorCases.standard.find(c => c.label === 'B-V');
 
-  const bigCutSizes = [
-    { width: 1280, height: 160 },
-    { width: 160, height: 1280 },
-    { width: 1120, height: 320 },
-    { width: 1120, height: 160 },
-    { width: 960, height: 160 },
-    { width: 640, height: 160 }
-  ];
+  const bigCutSizes = indoorCases.cut.filter(c =>
+    [
+      '1280x160',
+      '160x1280',
+      '1120x320',
+      '1120x160',
+      '960x160',
+      '640x160'
+    ].includes(`${c.width}x${c.height}`)
+  );
 
-  const smallTileSizes = [
-    { width: 320, height: 160 }
-  ];
+  const smallTileSizes = indoorCases.cut.filter(c => c.width === 320 && c.height === 160);
 
-  const offsetSizes = [
-    { width: 160, height: 960 },
-    { width: 160, height: 640 },
-    { width: 160, height: 320 },
-    { width: 320, height: 160 }
-  ];
+  const offsetSizes = indoorCases.cut.filter(c =>
+    [
+      '160x960',
+      '160x640',
+      '160x320',
+      '320x160'
+    ].includes(`${c.width}x${c.height}`)
+  );
 
   // === PHASE 1: Standard placements
   const fullA = placeRectBlocks(CASE_A, screenWidth, screenHeight, [], 'standard');
