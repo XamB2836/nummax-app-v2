@@ -1,6 +1,7 @@
 // /lib/LayoutEngine.js
 
 import { computeAdvancedLayout } from './OptimizerCore';
+import indoorCases from '../data/cases/indoor.json';
 
 export function scoreLayout(layout) {
   const fullArea = layout.standardCases.reduce((sum, c) => sum + c.width * c.height, 0);
@@ -18,6 +19,11 @@ function moduleFitLoss(width, height, modW, modH) {
   const usedW = Math.floor(width / modW) * modW;
   const usedH = Math.floor(height / modH) * modH;
   return width * height - usedW * usedH;
+}
+
+function caseOrientationLoss(modW, modH) {
+  const cases = indoorCases.standard;
+  return cases.reduce((sum, c) => sum + moduleFitLoss(c.width, c.height, modW, modH), 0);
 }
 
 export function computeLayoutVariants(screenWidth, screenHeight, module) {
@@ -61,12 +67,17 @@ export function chooseBestLayout(screenWidth, screenHeight, module, modeOverride
     module.width,
   );
 
+  const caseLossStandard = caseOrientationLoss(module.width, module.height);
+  const caseLossRotated = caseOrientationLoss(module.height, module.width);
+
   const screenArea = screenWidth * screenHeight;
   const unusedStandard = screenArea - getLayoutArea(layouts.standard.layout);
   const unusedRotated = screenArea - getLayoutArea(layouts.rotated.layout);
 
   let bestMode;
-  if (lossStandard !== lossRotated) {
+  if (caseLossStandard !== caseLossRotated) {
+    bestMode = caseLossStandard < caseLossRotated ? 'standard' : 'rotated';
+  } else if (lossStandard !== lossRotated) {
     bestMode = lossStandard < lossRotated ? 'standard' : 'rotated';
   } else if (unusedStandard !== unusedRotated) {
     bestMode = unusedStandard < unusedRotated ? 'standard' : 'rotated';
