@@ -85,3 +85,43 @@ export function RenderCell({ cell, scale, moduleWidth, moduleHeight, fillColor }
     </g>
   );
 }
+
+export function ModuleGridLines({
+  screenWidth,
+  screenHeight,
+  scale,
+  moduleWidth,
+  moduleHeight,
+}) {
+  const lines = [];
+
+  for (let x = moduleWidth; x < screenWidth; x += moduleWidth) {
+    lines.push(
+      <line
+        key={`g-v-${x}`}
+        x1={x * scale}
+        y1={0}
+        x2={x * scale}
+        y2={screenHeight * scale}
+        stroke="white"
+        strokeWidth="1"
+      />
+    );
+  }
+
+  for (let y = moduleHeight; y < screenHeight; y += moduleHeight) {
+    lines.push(
+      <line
+        key={`g-h-${y}`}
+        x1={0}
+        y1={y * scale}
+        x2={screenWidth * scale}
+        y2={y * scale}
+        stroke="white"
+        strokeWidth="1"
+      />
+    );
+  }
+
+  return <g>{lines}</g>;
+}

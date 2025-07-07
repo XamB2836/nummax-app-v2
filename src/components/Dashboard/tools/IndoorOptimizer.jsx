@@ -15,7 +15,7 @@ import { countModules, computeAreaM2 } from "@/lib/layoutStats"
 import { calculateConsumption } from "@/lib/consumptionCalculator"
 import { DimensionValidator } from "@/lib/DimensionValidator"
 import { generateCaseSummary } from "@/lib/caseSummary"
-import { RenderCell } from "@/lib/CaseRenderer"
+import { RenderCell, ModuleGridLines } from "@/lib/CaseRenderer"
 
 export function IndoorOptimizer() {
   const [screenWidth, setScreenWidth] = useState(3360)
@@ -133,11 +133,20 @@ export function IndoorOptimizer() {
               height={screenHeight * previewScale}
               className="border bg-muted"
             >
+              <ModuleGridLines
+                screenWidth={screenWidth}
+                screenHeight={screenHeight}
+                scale={previewScale}
+                moduleWidth={ledModule.width}
+                moduleHeight={ledModule.height}
+              />
               {layout.standardCases.map((cell, i) => (
                 <RenderCell
                   key={`std-${i}`}
                   cell={cell}
                   scale={previewScale}
+                  moduleWidth={ledModule.width}
+                  moduleHeight={ledModule.height}
                   fillColor={colorMap[cell.type]}
                 />
               ))}
@@ -146,6 +155,8 @@ export function IndoorOptimizer() {
                   key={`cut-${i}`}
                   cell={cell}
                   scale={previewScale}
+                  moduleWidth={ledModule.width}
+                  moduleHeight={ledModule.height}
                   fillColor={colorMap[cell.type]}
                 />
               ))}

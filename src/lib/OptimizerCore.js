@@ -96,6 +96,9 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   // === PHASE 4: Offset Sweep – Misaligned Cuts (catch final edge zones)
   gridOffsetSweepFiller(layout.cutCases, occupied, screenWidth, screenHeight, offsetSizes, moduleW, moduleH);
 
+  // === Final pass to fill remaining gaps with module-sized tiles
+  gridSweepFiller(layout.cutCases, occupied, screenWidth, screenHeight, smallTileSizes, moduleW, moduleH);
+
   return layout;
 }
 

@@ -8,7 +8,7 @@ import {
 } from "@/components/Dashboard/ui/card"
 import { Input } from "@/components/Dashboard/ui/input"
 import { validateScreenDimensions } from "@/lib/InputHandler"
-import { RenderCell } from "@/lib/CaseRenderer"
+import { RenderCell, ModuleGridLines } from "@/lib/CaseRenderer"
 import { computeOutdoorLayout, OUTDOOR_LED_MODULE } from "@/lib/OutdoorLayoutEngine"
 
 export function OutdoorOptimizer() {
@@ -71,6 +71,13 @@ export function OutdoorOptimizer() {
             height={(screenHeight * scale) + 1}
             className="mx-auto border bg-muted"
           >
+            <ModuleGridLines
+              screenWidth={screenWidth}
+              screenHeight={screenHeight}
+              scale={scale}
+              moduleWidth={OUTDOOR_LED_MODULE.width}
+              moduleHeight={OUTDOOR_LED_MODULE.height}
+            />
             {layout.map((cell, i) => (
               <RenderCell
                 key={i}
