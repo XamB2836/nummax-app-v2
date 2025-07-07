@@ -9,6 +9,11 @@ export function scoreLayout(layout) {
   return (fullArea * 2) + cutArea - (totalCuts * 3000);
 }
 
+function getLayoutArea(layout) {
+  const sumArea = (cells) => cells.reduce((sum, c) => sum + c.width * c.height, 0);
+  return sumArea(layout.standardCases) + sumArea(layout.cutCases);
+}
+
 export function computeLayoutVariants(screenWidth, screenHeight, module) {
   const standardLayout = computeAdvancedLayout(
     screenWidth,
@@ -37,9 +42,18 @@ export function chooseBestLayout(screenWidth, screenHeight, module, modeOverride
     return { layout: layouts[modeOverride].layout, mode: modeOverride };
   }
 
-  const scoreStandard = scoreLayout(layouts.standard.layout);
-  const scoreRotated = scoreLayout(layouts.rotated.layout);
-  const bestMode = scoreStandard >= scoreRotated ? 'standard' : 'rotated';
+  const screenArea = screenWidth * screenHeight;
+  const unusedStandard = screenArea - getLayoutArea(layouts.standard.layout);
+  const unusedRotated = screenArea - getLayoutArea(layouts.rotated.layout);
+
+  let bestMode;
+  if (unusedStandard !== unusedRotated) {
+    bestMode = unusedStandard < unusedRotated ? 'standard' : 'rotated';
+  } else {
+    const scoreStandard = scoreLayout(layouts.standard.layout);
+    const scoreRotated = scoreLayout(layouts.rotated.layout);
+    bestMode = scoreStandard >= scoreRotated ? 'standard' : 'rotated';
+  }
 
   return { layout: layouts[bestMode].layout, mode: bestMode };
 }
