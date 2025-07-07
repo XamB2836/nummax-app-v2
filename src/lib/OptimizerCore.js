@@ -38,8 +38,11 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   );
 
   const bigCutSizes = indoorCases.cut
-    .filter((c) =>
-      caseFits(c) && !(c.width === 1280 && c.height === 160)
+    .filter(
+      (c) =>
+        caseFits(c) &&
+        !(c.width === 1280 && c.height === 160) &&
+        !(c.width === 160 && c.height === 1280)
     )
     .sort((a, b) => b.width * b.height - a.width * a.height);
 

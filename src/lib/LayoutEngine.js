@@ -70,6 +70,9 @@ export function chooseBestLayout(screenWidth, screenHeight, module, modeOverride
   const caseLossStandard = caseOrientationLoss(module.width, module.height);
   const caseLossRotated = caseOrientationLoss(module.height, module.width);
 
+  const cutsStandard = layouts.standard.layout.cutCases.length;
+  const cutsRotated = layouts.rotated.layout.cutCases.length;
+
   const screenArea = screenWidth * screenHeight;
   const unusedStandard = screenArea - getLayoutArea(layouts.standard.layout);
   const unusedRotated = screenArea - getLayoutArea(layouts.rotated.layout);
@@ -79,6 +82,8 @@ export function chooseBestLayout(screenWidth, screenHeight, module, modeOverride
     bestMode = caseLossStandard < caseLossRotated ? 'standard' : 'rotated';
   } else if (lossStandard !== lossRotated) {
     bestMode = lossStandard < lossRotated ? 'standard' : 'rotated';
+  } else if (cutsStandard !== cutsRotated) {
+    bestMode = cutsStandard < cutsRotated ? 'standard' : 'rotated';
   } else if (unusedStandard !== unusedRotated) {
     bestMode = unusedStandard < unusedRotated ? 'standard' : 'rotated';
   } else {
