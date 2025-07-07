@@ -47,43 +47,38 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   const CASE_B_H = indoorCases.standard.find((c) => c.label === 'B-H');
   const CASE_B_V = indoorCases.standard.find((c) => c.label === 'B-V');
 
-  const bigCutSizes = indoorCases.cut.filter((c) =>
-    [
-      '1280x160',
-      '160x1280',
-      '1120x320',
-      '1120x160',
-      '960x160',
-      '640x160',
-    ].includes(`${c.width}x${c.height}`)
+  const caseFits = (c) => c.width % moduleW === 0 && c.height % moduleH === 0;
+
+  const stdCases = [CASE_A, CASE_B_H, CASE_B_V].filter((c) => c && caseFits(c));
+  const cutCases = [SLICED_A_HALF, SLICED_A_THIRD].filter((c) => c && caseFits(c));
+
+  const bigCutSizes = indoorCases.cut
+    .filter((c) => caseFits(c))
+    .sort((a, b) => b.width * b.height - a.width * a.height);
+
+  const smallTileSizes = indoorCases.cut.filter(
+    (c) => c.width === moduleW && c.height === moduleH
   );
 
-  const smallTileSizes = indoorCases.cut.filter((c) => c.width === 320 && c.height === 160);
-
-  const offsetSizes = indoorCases.cut.filter((c) =>
-    ['160x960', '160x640', '160x320', '320x160'].includes(`${c.width}x${c.height}`)
+  const offsetSizes = indoorCases.cut.filter(
+    (c) =>
+      caseFits(c) &&
+      ['160x960', '160x640', '160x320', '320x160'].includes(`${c.width}x${c.height}`)
   );
 
   // === PHASE 1: Standard placements
-  const fullA = placeRectBlocks(CASE_A, screenWidth, screenHeight, [], 'standard');
-  layout.standardCases.push(...fullA.placed);
-  const occupied = [...layout.standardCases];
+  const occupied = [];
+  stdCases.forEach((def) => {
+    const placed = placeRectBlocks(def, screenWidth, screenHeight, occupied, 'standard');
+    layout.standardCases.push(...placed.placed);
+    occupied.push(...placed.placed);
+  });
 
-  const slicedHalf = placeRectBlocks(SLICED_A_HALF, screenWidth, screenHeight, occupied, 'cut');
-  layout.cutCases.push(...slicedHalf.placed);
-  occupied.push(...slicedHalf.placed);
-
-  const slicedThird = placeRectBlocks(SLICED_A_THIRD, screenWidth, screenHeight, occupied, 'cut');
-  layout.cutCases.push(...slicedThird.placed);
-  occupied.push(...slicedThird.placed);
-
-  const bh = placeRectBlocks(CASE_B_H, screenWidth, screenHeight, occupied, 'standard');
-  layout.standardCases.push(...bh.placed);
-  occupied.push(...bh.placed);
-
-  const bv = placeRectBlocks(CASE_B_V, screenWidth, screenHeight, occupied, 'standard');
-  layout.standardCases.push(...bv.placed);
-  occupied.push(...bv.placed);
+  cutCases.forEach((def) => {
+    const placed = placeRectBlocks(def, screenWidth, screenHeight, occupied, 'cut');
+    layout.cutCases.push(...placed.placed);
+    occupied.push(...placed.placed);
+  });
 
   // === PHASE 2: Grid Sweep – Priority Big Blocks
   gridSweepFiller(layout.cutCases, occupied, screenWidth, screenHeight, bigCutSizes, moduleW, moduleH);
@@ -166,12 +161,13 @@ function gridSweepFiller(cutCases, occupied, maxW, maxH, cutSizes, moduleW, modu
 
 // === OFFSET SWEEP FILLER ===
 function gridOffsetSweepFiller(cutCases, occupied, maxW, maxH, offsetSizes, moduleW, moduleH) {
-  const step = Math.min(moduleW, moduleH);
+  const stepX = moduleW;
+  const stepY = moduleH;
   const isOccupied = (x, y, w, h) =>
     occupied.some((cell) => x < cell.x + cell.width && x + w > cell.x && y < cell.y + cell.height && y + h > cell.y);
 
-  for (let y = 0; y <= maxH - step; y += step) {
-    for (let x = 0; x <= maxW - step; x += step) {
+  for (let y = 0; y <= maxH - stepY; y += stepY) {
+    for (let x = 0; x <= maxW - stepX; x += stepX) {
       for (let block of offsetSizes) {
         const { width, height } = block;
         if (x + width <= maxW && y + height <= maxH && !isOccupied(x, y, width, height)) {
