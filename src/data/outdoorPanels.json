@@ -1,0 +1,17 @@
+[
+  {
+    "id": "DVL-Alu-O-3,81",
+    "name": "DVL-Alu-O-3,81",
+    "wattPerM2": 600
+  },
+  {
+    "id": "DVL-Pla-O-4",
+    "name": "DVL-Pla-O-4",
+    "wattPerM2": 600
+  },
+  {
+    "id": "DVL-Pla-O-4-HB",
+    "name": "DVL-Pla-O-4-HB",
+    "wattPerM2": 600
+  }
+]
