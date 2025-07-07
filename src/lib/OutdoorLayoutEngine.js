@@ -1,15 +1,6 @@
-export const OUTDOOR_CASE_SIZES = [
-  { width: 1600, height: 960 },
-  { width: 1600, height: 640 },
-  { width: 1600, height: 320 },
-  { width: 1280, height: 960 },
-  { width: 1280, height: 640 },
-  { width: 1280, height: 320 },
-  { width: 960, height: 960 },
-  { width: 960, height: 640 },
-  { width: 960, height: 320 },
-  { width: 640, height: 320 }
-];
+import outdoorCases from '@/data/outdoorCases.json';
+
+export const OUTDOOR_CASE_SIZES = outdoorCases;
 
 export function computeOutdoorLayout(screenWidth, screenHeight) {
   const layout = {
@@ -49,3 +40,6 @@ export function computeOutdoorLayout(screenWidth, screenHeight) {
 
   return layout;
 }
+
+// Backwards compatibility alias
+export const chooseOutdoorLayout = computeOutdoorLayout;
