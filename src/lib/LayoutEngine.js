@@ -14,6 +14,12 @@ function getLayoutArea(layout) {
   return sumArea(layout.standardCases) + sumArea(layout.cutCases);
 }
 
+function moduleFitLoss(width, height, modW, modH) {
+  const usedW = Math.floor(width / modW) * modW;
+  const usedH = Math.floor(height / modH) * modH;
+  return width * height - usedW * usedH;
+}
+
 export function computeLayoutVariants(screenWidth, screenHeight, module) {
   const standardLayout = computeAdvancedLayout(
     screenWidth,
@@ -42,12 +48,27 @@ export function chooseBestLayout(screenWidth, screenHeight, module, modeOverride
     return { layout: layouts[modeOverride].layout, mode: modeOverride };
   }
 
+  const lossStandard = moduleFitLoss(
+    screenWidth,
+    screenHeight,
+    module.width,
+    module.height,
+  );
+  const lossRotated = moduleFitLoss(
+    screenWidth,
+    screenHeight,
+    module.height,
+    module.width,
+  );
+
   const screenArea = screenWidth * screenHeight;
   const unusedStandard = screenArea - getLayoutArea(layouts.standard.layout);
   const unusedRotated = screenArea - getLayoutArea(layouts.rotated.layout);
 
   let bestMode;
-  if (unusedStandard !== unusedRotated) {
+  if (lossStandard !== lossRotated) {
+    bestMode = lossStandard < lossRotated ? 'standard' : 'rotated';
+  } else if (unusedStandard !== unusedRotated) {
     bestMode = unusedStandard < unusedRotated ? 'standard' : 'rotated';
   } else {
     const scoreStandard = scoreLayout(layouts.standard.layout);
