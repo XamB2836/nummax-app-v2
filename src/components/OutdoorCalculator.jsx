@@ -10,7 +10,7 @@ import {
 } from "@/components/Dashboard/ui/card"
 import { Input } from "@/components/Dashboard/ui/input"
 import { validateScreenDimensions } from "@/lib/InputHandler"
-import { chooseOutdoorLayout } from "@/lib/LayoutEngine"  // use the new function
+import { computeOutdoorLayout } from "@/lib/OutdoorLayoutEngine"
 import { RenderCell } from "@/lib/CaseRenderer"
 
 export function OutdoorOptimizer() {
@@ -19,7 +19,7 @@ export function OutdoorOptimizer() {
   const { warning } = validateScreenDimensions(screenWidth, screenHeight)
 
   // Invoke the extracted algorithm
-  const layout = chooseOutdoorLayout(screenWidth, screenHeight)
+  const layout = computeOutdoorLayout(screenWidth, screenHeight).standardCases
   const scale = 0.2
 
   return (
