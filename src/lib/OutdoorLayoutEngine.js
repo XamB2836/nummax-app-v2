@@ -1,5 +1,5 @@
-import outdoorCases from '../../data/cases/outdoor.json';
-import outdoorModules from '../../data/led-modules/outdoor.json';
+import outdoorCases from '../data/cases/outdoor.json';
+import outdoorModules from '../data/led-modules/outdoor.json';
 
 export const OUTDOOR_CASE_SIZES = outdoorCases;
 export const OUTDOOR_LED_MODULE = outdoorModules[0];

@@ -1,7 +1,7 @@
 // /lib/OptimizerCore.js
 
-import indoorModules from '../../data/led-modules/indoor.json';
-import indoorCases from '../../data/cases/indoor.json';
+import indoorModules from '../data/led-modules/indoor.json';
+import indoorCases from '../data/cases/indoor.json';
 
 // === LED MODULE CONFIG ===
 export const LED_STANDARD = indoorModules.find(m => m.label === 'standard');
