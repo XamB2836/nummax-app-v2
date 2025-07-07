@@ -2,21 +2,17 @@
 
 import indoorModules from '../data/led-modules/indoor.json';
 import indoorCases from '../data/cases/indoor.json';
+import indoorPanels from '../data/panels/indoor.json';
 
 // === LED MODULE CONFIG ===
 export const LED_STANDARD = indoorModules.find(m => m.label === 'standard');
 export const LED_ROTATED = indoorModules.find(m => m.label === 'rotated');
 
 // === CASE SIZES ===
-export const STANDARD_CASE_WIDTH = 1120;
-export const STANDARD_CASE_HEIGHT = 640;
+// indoor case dimensions are defined in src/data/cases/indoor.json
 
 // === PANEL CONFIG ===
-export const ledPanels = [
-  { id: 'panel1', name: '2.5 GOB', wattPerM2: 550 },
-  { id: 'panel2', name: '1.25 Flex', wattPerM2: 290 },
-  { id: 'panel3', name: 'LED Panel C', wattPerM2: 200 }
-];
+export const ledPanels = indoorPanels;
 
 // === MODULE COUNT CALC ===
 export function computeModuleCount(cell, moduleW, moduleH) {

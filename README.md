@@ -37,7 +37,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Data
 
-All predefined case sizes and LED modules can be found in the `src/data/` directory.
+All predefined case sizes, LED modules and indoor panel power ratings can be found in the `src/data/` directory.
 Indoor and outdoor lists are separated to keep layouts organized. Indoor cases
 are split between `standard` and `cut` sizes. These JSON files are imported by
 the layout engines so updates are automatically reflected in the app.
