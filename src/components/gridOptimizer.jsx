@@ -16,6 +16,7 @@ const { calculateConsumption } = require('@/lib/consumptionCalculator');
 const { validateScreenDimensions } = require('@/lib/InputHandler');
 const { generateCaseSummary } = require('@/lib/caseSummary');
 const { RenderCell } = require('@/lib/CaseRenderer');
+const { countModules } = require('@/lib/layoutStats');
 
 
 const GridOptimizer = () => {
@@ -35,10 +36,7 @@ const GridOptimizer = () => {
     ? calculateConsumption(screenWidth, screenHeight, selectedPanelObj.wattPerM2)
     : 0;
 
-  const totalModules = [...layout.standardCases, ...(layout.cutCases || [])].reduce(
-    (sum, c) => sum + ((c.width / ledModule.width) * (c.height / ledModule.height)),
-    0
-  );
+  const totalModules = countModules(layout, ledModule.width, ledModule.height);
 
   const scale = 0.2;
   const colorMap = {

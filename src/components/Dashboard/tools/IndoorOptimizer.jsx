@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/Dashboard/ui/input"
 import { LED_STANDARD, LED_ROTATED, ledPanels } from "@/lib/OptimizerCore"
 import { chooseBestLayout } from "@/lib/LayoutEngine"
+import { countModules, computeAreaM2 } from "@/lib/layoutStats"
 import { calculateConsumption } from "@/lib/consumptionCalculator"
 import { DimensionValidator } from "@/lib/DimensionValidator"
 import { generateCaseSummary } from "@/lib/caseSummary"
@@ -36,18 +37,11 @@ export function IndoorOptimizer() {
     ? calculateConsumption(screenWidth, screenHeight, panelObj.wattPerM2)
     : 0
 
-  const totalModules = [
-    ...layout.standardCases,
-    ...(layout.cutCases || []),
-  ].reduce(
-    (sum, c) =>
-      sum + (c.width / ledModule.width) * (c.height / ledModule.height),
-    0
-  )
+  const totalModules = countModules(layout, ledModule.width, ledModule.height)
 
   const stdSum = generateCaseSummary(layout.standardCases)
   const cutSum = generateCaseSummary(layout.cutCases || [])
-  const areaM2 = ((screenWidth / 1000) * (screenHeight / 1000)).toFixed(2)
+  const areaM2 = computeAreaM2(screenWidth, screenHeight).toFixed(2)
 
   // === SVG preview scale (max 500px) ===
   const maxPreview = 500
