@@ -12,26 +12,14 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react"
 import { calculateConsumption } from '@/lib/consumptionCalculator'
 import { validateScreenDimensions } from '@/lib/InputHandler'
 import { RenderCell } from '@/lib/CaseRenderer'
-
-const OUTDOOR_CASES = [
-  { width: 960, height: 320 },
-  { width: 960, height: 640 },
-  { width: 960, height: 960 },
-  { width: 960, height: 1280 },
-  { width: 1280, height: 320 },
-  { width: 1280, height: 640 },
-  { width: 1280, height: 960 },
-  { width: 1280, height: 1280 },
-  { width: 1600, height: 640 },
-  { width: 1600, height: 960 },
-]
+import { computeOutdoorLayout } from '@/lib/OutdoorLayoutEngine'
 
 export function GridOptimizerOut() {
   const [screenWidth, setScreenWidth] = useState(1120)
   const [screenHeight, setScreenHeight] = useState(640)
 
   const { valid: dimsValid, warning: dimsWarning } = validateScreenDimensions(screenWidth, screenHeight)
-  const layout = arrangeOutdoorCases(screenWidth, screenHeight)
+  const layout = computeOutdoorLayout(screenWidth, screenHeight).standardCases
   const scale = 0.2
 
   return (
@@ -95,27 +83,3 @@ export function GridOptimizerOut() {
   )
 }
 
-function arrangeOutdoorCases(screenWidth, screenHeight) {
-  // Simple greedy placement, no rotation or cutting
-  const placed = []
-  let remainingHeight = screenHeight
-  let y = 0
-  while (remainingHeight > 0) {
-    let rowFilled = false
-    let x = 0
-    let remainingWidth = screenWidth
-    while (remainingWidth > 0) {
-      const fitting = OUTDOOR_CASES.find(c => c.width <= remainingWidth && c.height <= remainingHeight)
-      if (!fitting) break
-      placed.push({ ...fitting, x, y, type: 'standard' })
-      x += fitting.width
-      remainingWidth -= fitting.width
-      rowFilled = true
-    }
-    if (!rowFilled) break
-    const maxHeightInRow = Math.max(...placed.filter(c => c.y === y).map(c => c.height), 0)
-    y += maxHeightInRow
-    remainingHeight -= maxHeightInRow
-  }
-  return placed
-}

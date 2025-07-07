@@ -1,0 +1,5 @@
+[
+  { "id": "panel1", "name": "2.5 GOB", "wattPerM2": 550 },
+  { "id": "panel2", "name": "1.25 Flex", "wattPerM2": 290 },
+  { "id": "panel3", "name": "LED Panel C", "wattPerM2": 200 }
+]
