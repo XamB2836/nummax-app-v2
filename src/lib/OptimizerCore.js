@@ -46,25 +46,21 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   const CASE_B_H = indoorCases.standard.find((c) => c.label === 'B-H');
   const CASE_B_V = indoorCases.standard.find((c) => c.label === 'B-V');
 
-  const bigCutSizes = [
-    indoorCases.cut.find((c) => c.width === 1280 && c.height === 160),
-    indoorCases.cut.find((c) => c.width === 160 && c.height === 1280),
-    SLICED_A_HALF,
-    SLICED_A_THIRD,
-    indoorCases.cut.find((c) => c.width === 960 && c.height === 160),
-    indoorCases.cut.find((c) => c.width === 640 && c.height === 160),
-  ].filter(Boolean);
+  const bigCutSizes = indoorCases.cut
+    .filter((c) => c.width > moduleW || c.height > moduleH)
+    .sort((a, b) => b.width * b.height - a.width * a.height);
 
-  const smallTileSizes = [
-    indoorCases.cut.find((c) => c.width === moduleW && c.height === moduleH),
-  ].filter(Boolean);
+  const smallTileSizes = indoorCases.cut.filter(
+    (c) => c.width === moduleW && c.height === moduleH
+  );
 
-  const offsetSizes = [
-    indoorCases.cut.find((c) => c.width === 160 && c.height === 960),
-    indoorCases.cut.find((c) => c.width === 160 && c.height === 640),
-    indoorCases.cut.find((c) => c.width === 160 && c.height === 320),
-    indoorCases.cut.find((c) => c.width === 320 && c.height === 160),
-  ].filter(Boolean);
+  const offsetSizes = indoorCases.cut
+    .filter(
+      (c) =>
+        (c.width < moduleW && c.height > moduleH) ||
+        (c.height < moduleH && c.width > moduleW)
+    )
+    .sort((a, b) => b.width * b.height - a.width * a.height);
 
   // === PHASE 1: Standard placements
   const fullA = placeRectBlocks(CASE_A, screenWidth, screenHeight, [], 'standard');
