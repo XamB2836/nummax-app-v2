@@ -181,7 +181,7 @@ export function IndoorOptimizer() {
               <CardContent className="text-center">
                 <p className="text-2xl font-bold">{consumption.toFixed(2)} W</p>
                 <p className="text-sm text-muted-foreground">
-                  Area =  {areaM2} m²
+                 {areaM2} m² at {moduleObj.wattPerM2} W/m²
                 </p>
               </CardContent>
             </Card>
@@ -196,7 +196,7 @@ export function IndoorOptimizer() {
                   {totalModules.toFixed(1)}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Modules placés
+                 {moduleObj.name}
                 </p>
               </CardContent>
             </Card>
