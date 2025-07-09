@@ -51,9 +51,12 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
     indoorCases.cut.find((c) => c.width === 160 && c.height === 1280),
     SLICED_A_HALF,
     SLICED_A_THIRD,
+    indoorCases.cut.find((c) => c.width === 960 && c.height === 320),
     indoorCases.cut.find((c) => c.width === 960 && c.height === 160),
     indoorCases.cut.find((c) => c.width === 640 && c.height === 160),
-  ].filter(Boolean);
+  ]
+    .filter(Boolean)
+    .sort((a, b) => b.width * b.height - a.width * a.height);
 
   const smallTileSizes = [
     indoorCases.cut.find((c) => c.width === moduleW && c.height === moduleH),
@@ -64,7 +67,9 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
     indoorCases.cut.find((c) => c.width === 160 && c.height === 640),
     indoorCases.cut.find((c) => c.width === 160 && c.height === 320),
     indoorCases.cut.find((c) => c.width === 320 && c.height === 160),
-  ].filter(Boolean);
+  ]
+    .filter(Boolean)
+    .sort((a, b) => b.width * b.height - a.width * a.height);
 
   // === PHASE 1: Standard placements
   const fullA = placeRectBlocks(CASE_A, screenWidth, screenHeight, [], 'standard');
