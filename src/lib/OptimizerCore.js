@@ -46,25 +46,21 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   const CASE_B_H = indoorCases.standard.find((c) => c.label === 'B-H');
   const CASE_B_V = indoorCases.standard.find((c) => c.label === 'B-V');
 
-  const bigCutSizes = [
-    indoorCases.cut.find((c) => c.width === 1280 && c.height === 160),
-    indoorCases.cut.find((c) => c.width === 160 && c.height === 1280),
-    SLICED_A_HALF,
-    SLICED_A_THIRD,
-    indoorCases.cut.find((c) => c.width === 960 && c.height === 160),
-    indoorCases.cut.find((c) => c.width === 640 && c.height === 160),
-  ].filter(Boolean);
+  const bigCutSizes = indoorCases.cut
+    .filter((c) => c.width > moduleW || c.height > moduleH)
+    .sort((a, b) => b.width * b.height - a.width * a.height);
 
-  const smallTileSizes = [
-    indoorCases.cut.find((c) => c.width === moduleW && c.height === moduleH),
-  ].filter(Boolean);
+  const smallTileSizes = indoorCases.cut.filter(
+    (c) => c.width === moduleW && c.height === moduleH
+  );
 
-  const offsetSizes = [
-    indoorCases.cut.find((c) => c.width === 160 && c.height === 960),
-    indoorCases.cut.find((c) => c.width === 160 && c.height === 640),
-    indoorCases.cut.find((c) => c.width === 160 && c.height === 320),
-    indoorCases.cut.find((c) => c.width === 320 && c.height === 160),
-  ].filter(Boolean);
+  const offsetSizes = indoorCases.cut
+    .filter(
+      (c) =>
+        (c.width < moduleW && c.height > moduleH) ||
+        (c.height < moduleH && c.width > moduleW)
+    )
+    .sort((a, b) => b.width * b.height - a.width * a.height);
 
   // === PHASE 1: Standard placements
   const fullA = placeRectBlocks(CASE_A, screenWidth, screenHeight, [], 'standard');
@@ -141,14 +137,14 @@ function placeRectBlocks(caseDef, maxW, maxH, existing = [], type = 'standard') 
 
 // === GRID SWEEP FILLER ===
 function gridSweepFiller(cutCases, occupied, maxW, maxH, cutSizes, moduleW, moduleH) {
-  const minW = moduleW;
-  const minH = moduleH;
+  const minW = Math.min(moduleW, ...cutSizes.map((c) => c.width));
+  const minH = Math.min(moduleH, ...cutSizes.map((c) => c.height));
 
   const isOccupied = (x, y, w, h) =>
     occupied.some((cell) => x < cell.x + cell.width && x + w > cell.x && y < cell.y + cell.height && y + h > cell.y);
 
-  for (let y = 0; y + minH <= maxH; y += minH) {
-    for (let x = 0; x + minW <= maxW;) {
+  for (let y = 0; y < maxH; y += minH) {
+    for (let x = 0; x < maxW;) {
       let placed = false;
       for (let block of cutSizes) {
         const { width, height } = block;
@@ -177,13 +173,13 @@ function gridSweepFiller(cutCases, occupied, maxW, maxH, cutSizes, moduleW, modu
 
 // === OFFSET SWEEP FILLER ===
 function gridOffsetSweepFiller(cutCases, occupied, maxW, maxH, offsetSizes, moduleW, moduleH) {
-  const stepX = moduleW;
-  const stepY = moduleH;
+  const stepX = Math.min(moduleW, ...offsetSizes.map((c) => c.width));
+  const stepY = Math.min(moduleH, ...offsetSizes.map((c) => c.height));
   const isOccupied = (x, y, w, h) =>
     occupied.some((cell) => x < cell.x + cell.width && x + w > cell.x && y < cell.y + cell.height && y + h > cell.y);
 
-  for (let y = 0; y <= maxH - stepY; y += stepY) {
-    for (let x = 0; x <= maxW - stepX; x += stepX) {
+  for (let y = 0; y < maxH; y += stepY) {
+    for (let x = 0; x < maxW; x += stepX) {
       for (let block of offsetSizes) {
         const { width, height } = block;
         if (x + width <= maxW && y + height <= maxH && !isOccupied(x, y, width, height)) {
