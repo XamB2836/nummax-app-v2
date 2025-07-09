@@ -141,14 +141,14 @@ function placeRectBlocks(caseDef, maxW, maxH, existing = [], type = 'standard') 
 
 // === GRID SWEEP FILLER ===
 function gridSweepFiller(cutCases, occupied, maxW, maxH, cutSizes, moduleW, moduleH) {
-  const minW = moduleW;
-  const minH = moduleH;
+  const minW = Math.min(moduleW, ...cutSizes.map((c) => c.width));
+  const minH = Math.min(moduleH, ...cutSizes.map((c) => c.height));
 
   const isOccupied = (x, y, w, h) =>
     occupied.some((cell) => x < cell.x + cell.width && x + w > cell.x && y < cell.y + cell.height && y + h > cell.y);
 
-  for (let y = 0; y + minH <= maxH; y += minH) {
-    for (let x = 0; x + minW <= maxW;) {
+  for (let y = 0; y < maxH; y += minH) {
+    for (let x = 0; x < maxW;) {
       let placed = false;
       for (let block of cutSizes) {
         const { width, height } = block;
@@ -177,13 +177,13 @@ function gridSweepFiller(cutCases, occupied, maxW, maxH, cutSizes, moduleW, modu
 
 // === OFFSET SWEEP FILLER ===
 function gridOffsetSweepFiller(cutCases, occupied, maxW, maxH, offsetSizes, moduleW, moduleH) {
-  const stepX = moduleW;
-  const stepY = moduleH;
+  const stepX = Math.min(moduleW, ...offsetSizes.map((c) => c.width));
+  const stepY = Math.min(moduleH, ...offsetSizes.map((c) => c.height));
   const isOccupied = (x, y, w, h) =>
     occupied.some((cell) => x < cell.x + cell.width && x + w > cell.x && y < cell.y + cell.height && y + h > cell.y);
 
-  for (let y = 0; y <= maxH - stepY; y += stepY) {
-    for (let x = 0; x <= maxW - stepX; x += stepX) {
+  for (let y = 0; y < maxH; y += stepY) {
+    for (let x = 0; x < maxW; x += stepX) {
       for (let block of offsetSizes) {
         const { width, height } = block;
         if (x + width <= maxW && y + height <= maxH && !isOccupied(x, y, width, height)) {
