@@ -50,7 +50,10 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
     .filter(
       (c) =>
         (c.width > moduleW || c.height > moduleH) &&
-        !(c.width === 1280 && c.height === 160)
+        !(
+          (c.width === 1280 && c.height === 160) ||
+          (c.width === 160 && c.height === 1280)
+        )
     )
     .sort((a, b) => b.width * b.height - a.width * a.height);
 
@@ -61,8 +64,9 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   const offsetSizes = indoorCases.cut
     .filter(
       (c) =>
-        (c.width < moduleW && c.height > moduleH) ||
-        (c.height < moduleH && c.width > moduleW)
+        ((c.width < moduleW && c.height > moduleH) ||
+          (c.height < moduleH && c.width > moduleW)) &&
+        !(c.width === 160 && c.height === 1280)
     )
     .sort((a, b) => b.width * b.height - a.width * a.height);
 
