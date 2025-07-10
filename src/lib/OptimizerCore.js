@@ -46,6 +46,25 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   const CASE_B_H = indoorCases.standard.find((c) => c.label === 'B-H');
   const CASE_B_V = indoorCases.standard.find((c) => c.label === 'B-V');
 
+  // Special case: when the screen height equals 480 and the width divides
+  // evenly into 640, prefer using 640x480 cut cases instead of stacking
+  // 1280x160 standard cases vertically.
+  if (screenHeight === 480 && screenWidth % 640 === 0) {
+    const cols = Math.floor(screenWidth / 640);
+    for (let c = 0; c < cols; c++) {
+      const block = {
+        x: c * 640,
+        y: 0,
+        width: 640,
+        height: 480,
+        type: 'cut',
+        label: '640x480',
+      };
+      layout.cutCases.push(block);
+    }
+    return layout;
+  }
+
   const bigCutSizes = indoorCases.cut
     .filter(
       (c) =>
