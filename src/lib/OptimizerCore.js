@@ -47,7 +47,11 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   const CASE_B_V = indoorCases.standard.find((c) => c.label === 'B-V');
 
   const bigCutSizes = indoorCases.cut
-    .filter((c) => c.width > moduleW || c.height > moduleH)
+    .filter(
+      (c) =>
+        (c.width > moduleW || c.height > moduleH) &&
+        !(c.width === 1280 && c.height === 160)
+    )
     .sort((a, b) => b.width * b.height - a.width * a.height);
 
   const smallTileSizes = indoorCases.cut.filter(
