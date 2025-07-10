@@ -75,7 +75,14 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   layout.cutCases.push(...slicedThird.placed);
   occupied.push(...slicedThird.placed);
 
-  const bh = placeRectBlocks(CASE_B_H, screenWidth, screenHeight, occupied, 'standard');
+  const bh = placeRectBlocks(
+    CASE_B_H,
+    screenWidth,
+    screenHeight,
+    occupied,
+    'standard',
+    { maxPerColumn: 2 }
+  );
   layout.standardCases.push(...bh.placed);
   occupied.push(...bh.placed);
 
@@ -99,13 +106,26 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
 }
 
 // === BLOCK PLACER ===
-function placeRectBlocks(caseDef, maxW, maxH, existing = [], type = 'standard') {
+function placeRectBlocks(
+  caseDef,
+  maxW,
+  maxH,
+  existing = [],
+  type = 'standard',
+  options = {}
+) {
   const placed = [];
   const cols = Math.floor(maxW / caseDef.width);
   const rows = Math.floor(maxH / caseDef.height);
 
+  const maxPerColumn =
+    typeof options.maxPerColumn === 'number' ? options.maxPerColumn : Infinity;
+  const placedPerColumn = new Array(cols).fill(0);
+
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
+      if (placedPerColumn[c] >= maxPerColumn) continue;
+
       const x = c * caseDef.width;
       const y = r * caseDef.height;
 
@@ -128,6 +148,7 @@ function placeRectBlocks(caseDef, maxW, maxH, existing = [], type = 'standard') 
         };
         placed.push(block);
         existing.push(block);
+        placedPerColumn[c]++;
       }
     }
   }
