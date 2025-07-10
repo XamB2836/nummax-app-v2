@@ -75,18 +75,18 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   layout.cutCases.push(...slicedThird.placed);
   occupied.push(...slicedThird.placed);
 
-  const bh = placeRectBlocks(CASE_B_H, screenWidth, screenHeight, occupied, 'standard');
-  layout.standardCases.push(...bh.placed);
-  occupied.push(...bh.placed);
-
-  const bv = placeRectBlocks(
-    CASE_B_V,
+  const bh = placeRectBlocks(
+    CASE_B_H,
     screenWidth,
     screenHeight,
     occupied,
     'standard',
     2
   );
+  layout.standardCases.push(...bh.placed);
+  occupied.push(...bh.placed);
+
+  const bv = placeRectBlocks(CASE_B_V, screenWidth, screenHeight, occupied, 'standard');
   layout.standardCases.push(...bv.placed);
   occupied.push(...bv.placed);
 
