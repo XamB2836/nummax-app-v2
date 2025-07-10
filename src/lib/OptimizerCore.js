@@ -100,6 +100,17 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   layout.standardCases.push(...fullA.placed);
   const occupied = [...layout.standardCases];
 
+  // Limit 1280x160 standard cases to two rows high
+  const bh = placeRectBlocks(
+    CASE_B_H,
+    screenWidth,
+    screenHeight,
+    occupied,
+    'standard',
+    2
+  );
+  layout.standardCases.push(...bh.placed);
+
   const slicedHalf = placeRectBlocks(
     SLICED_A_HALF,
     screenWidth,
@@ -117,17 +128,6 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
     'cut'
   );
   layout.cutCases.push(...slicedThird.placed);
-
-  // Limit 1280x160 standard cases to two rows high
-  const bh = placeRectBlocks(
-    CASE_B_H,
-    screenWidth,
-    screenHeight,
-    occupied,
-    'standard',
-    2
-  );
-  layout.standardCases.push(...bh.placed);
 
   // When rotated, avoid stacking more than two B-V columns
   const bv = placeRectBlocks(
