@@ -79,7 +79,14 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   layout.standardCases.push(...bh.placed);
   occupied.push(...bh.placed);
 
-  const bv = placeRectBlocks(CASE_B_V, screenWidth, screenHeight, occupied, 'standard');
+  const bv = placeRectBlocks(
+    CASE_B_V,
+    screenWidth,
+    screenHeight,
+    occupied,
+    'standard',
+    2
+  );
   layout.standardCases.push(...bv.placed);
   occupied.push(...bv.placed);
 
@@ -99,10 +106,17 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
 }
 
 // === BLOCK PLACER ===
-function placeRectBlocks(caseDef, maxW, maxH, existing = [], type = 'standard') {
+function placeRectBlocks(
+  caseDef,
+  maxW,
+  maxH,
+  existing = [],
+  type = 'standard',
+  maxStack = Infinity
+) {
   const placed = [];
   const cols = Math.floor(maxW / caseDef.width);
-  const rows = Math.floor(maxH / caseDef.height);
+  const rows = Math.min(Math.floor(maxH / caseDef.height), maxStack);
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
