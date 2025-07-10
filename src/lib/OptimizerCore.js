@@ -46,8 +46,34 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   const CASE_B_H = indoorCases.standard.find((c) => c.label === 'B-H');
   const CASE_B_V = indoorCases.standard.find((c) => c.label === 'B-V');
 
+  // Special case: when the screen height equals 480 and the width divides
+  // evenly into 640, prefer using 640x480 cut cases instead of stacking
+  // 1280x160 standard cases vertically.
+  if (screenHeight === 480 && screenWidth % 640 === 0) {
+    const cols = Math.floor(screenWidth / 640);
+    for (let c = 0; c < cols; c++) {
+      const block = {
+        x: c * 640,
+        y: 0,
+        width: 640,
+        height: 480,
+        type: 'cut',
+        label: '640x480',
+      };
+      layout.cutCases.push(block);
+    }
+    return layout;
+  }
+
   const bigCutSizes = indoorCases.cut
-    .filter((c) => c.width > moduleW || c.height > moduleH)
+    .filter(
+      (c) =>
+        (c.width > moduleW || c.height > moduleH) &&
+        !(
+          (c.width === 1280 && c.height === 160) ||
+          (c.width === 160 && c.height === 1280)
+        )
+    )
     .sort((a, b) => b.width * b.height - a.width * a.height);
 
   const smallTileSizes = indoorCases.cut.filter(
@@ -57,31 +83,63 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
   const offsetSizes = indoorCases.cut
     .filter(
       (c) =>
-        (c.width < moduleW && c.height > moduleH) ||
-        (c.height < moduleH && c.width > moduleW)
+        ((c.width < moduleW && c.height > moduleH) ||
+          (c.height < moduleH && c.width > moduleW)) &&
+        !(c.width === 160 && c.height === 1280)
     )
     .sort((a, b) => b.width * b.height - a.width * a.height);
 
   // === PHASE 1: Standard placements
-  const fullA = placeRectBlocks(CASE_A, screenWidth, screenHeight, [], 'standard');
+  const fullA = placeRectBlocks(
+    CASE_A,
+    screenWidth,
+    screenHeight,
+    [],
+    'standard'
+  );
   layout.standardCases.push(...fullA.placed);
   const occupied = [...layout.standardCases];
 
-  const slicedHalf = placeRectBlocks(SLICED_A_HALF, screenWidth, screenHeight, occupied, 'cut');
+  const slicedHalf = placeRectBlocks(
+    SLICED_A_HALF,
+    screenWidth,
+    screenHeight,
+    occupied,
+    'cut'
+  );
   layout.cutCases.push(...slicedHalf.placed);
-  occupied.push(...slicedHalf.placed);
 
-  const slicedThird = placeRectBlocks(SLICED_A_THIRD, screenWidth, screenHeight, occupied, 'cut');
+  const slicedThird = placeRectBlocks(
+    SLICED_A_THIRD,
+    screenWidth,
+    screenHeight,
+    occupied,
+    'cut'
+  );
   layout.cutCases.push(...slicedThird.placed);
-  occupied.push(...slicedThird.placed);
 
-  const bh = placeRectBlocks(CASE_B_H, screenWidth, screenHeight, occupied, 'standard');
+  // Limit 1280x160 standard cases to two rows high
+  const bh = placeRectBlocks(
+    CASE_B_H,
+    screenWidth,
+    screenHeight,
+    occupied,
+    'standard',
+    2
+  );
   layout.standardCases.push(...bh.placed);
-  occupied.push(...bh.placed);
 
-  const bv = placeRectBlocks(CASE_B_V, screenWidth, screenHeight, occupied, 'standard');
+  // When rotated, avoid stacking more than two B-V columns
+  const bv = placeRectBlocks(
+    CASE_B_V,
+    screenWidth,
+    screenHeight,
+    occupied,
+    'standard',
+    Infinity,
+    2
+  );
   layout.standardCases.push(...bv.placed);
-  occupied.push(...bv.placed);
 
   // === PHASE 2: Grid Sweep – Priority Big Blocks
   gridSweepFiller(layout.cutCases, occupied, screenWidth, screenHeight, bigCutSizes, moduleW, moduleH);
@@ -99,10 +157,18 @@ export function computeAdvancedLayout(screenWidth, screenHeight, moduleW, module
 }
 
 // === BLOCK PLACER ===
-function placeRectBlocks(caseDef, maxW, maxH, existing = [], type = 'standard') {
+function placeRectBlocks(
+  caseDef,
+  maxW,
+  maxH,
+  existing = [],
+  type = 'standard',
+  maxRows = Infinity,
+  maxCols = Infinity
+) {
   const placed = [];
-  const cols = Math.floor(maxW / caseDef.width);
-  const rows = Math.floor(maxH / caseDef.height);
+  const cols = Math.min(Math.floor(maxW / caseDef.width), maxCols);
+  const rows = Math.min(Math.floor(maxH / caseDef.height), maxRows);
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
